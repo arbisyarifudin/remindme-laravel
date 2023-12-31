@@ -1,0 +1,37 @@
+$primary: #003049;
+
+body {
+    // make linear gradient background (1: #EDE4B5, 2: #F1EAC2, 3: #F5EFD2, 4: #F6F2DB), patah-patah tiap warna
+    // background: linear-gradient(-110deg, #EDE4B5 25%, #F1EAC2 25%, #F1EAC2 50%, #F5EFD2 50%, #F5EFD2 75%, #F6F2DB 75%, #F6F2DB 100%);
+
+    // make linear gradient background (1: #07354E, 2: #0E415D, 3: #15506D, 4: #1B5779, 5: #276386), patah-patah tiap warna
+    // background: linear-gradient(60deg, #07354E 20%, #0E415D 20%, #0E415D 40%, #15506D 40%, #15506D 60%, #1B5779 60%, #1B5779 80%, #276386 80%, #276386 100%);
+
+    // make linear gradient background (1: #07354E, 2: #0E415D, 3: #15506D, 4: #1B5779, 5: #276386), patah-patah tiap warna, tapi 4 sampai ke 5 tidak ada patah-patah
+    background: linear-gradient(60deg, #07354E 20%, #0E415D 20%, #0E415D 40%, #15506D 40%, #15506D 60%, #1B5779 60%, #1B5779 80%, #276386 80%);
+
+    color: #003049;
+}
+
+
+.btn {
+
+    &.btn-primary {
+        background-color: $primary;
+        border-color: $primary;
+
+        &:hover {
+            background-color: darken($primary, 10%);
+            border-color: darken($primary, 10%);
+        }
+
+        &:active {
+            background-color: darken($primary, 20%);
+            border-color: darken($primary, 20%);
+        }
+
+        &:focus {
+            box-shadow: 0 0 0 0.2rem rgba(0, 48, 73, 0.5);
+        }
+    }
+}
