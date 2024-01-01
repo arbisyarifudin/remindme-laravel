@@ -24,7 +24,7 @@
                     <button class="next"><i class="bi bi-chevron-right"></i></button>
                 </div>
                 <div class="scrollable-card__list">
-                    <div class="card reminder" v-for="i in 10" :key="i">
+                    <div class="card reminder" v-for="i in 10" :key="i" @click="$router.push({ name: 'App Reminder Detail Page', params: { id: i } })">
                         <div class="card-body">
                             <div class="reminder-title">Meeting with Boss {{ i }}</div>
                             <div class="reminder-event-date"><i class="bi bi-clock"></i> 12:00 PM</div>
@@ -34,12 +34,15 @@
             </div>
 
             <ul class="reminder-list">
-                <li class="reminder-item" v-for="i in 15" :key="i">
+                <li class="reminder-item" v-for="i in 15" :key="i" @click="$router.push({ name: 'App Reminder Detail Page', params: { id: i } })">
                     <div class="reminder-item__time">
                         11:30 AM
                     </div>
                     <div class="reminder-item__body">
                         <div class="reminder-item__body__title">Meeting with Boss {{ i }}</div>
+                        <div class="reminder-item__body__desc">
+                            <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit.</p>
+                        </div>
                         <div class="reminder-item__body__time-left">30 minutes left</div>
                     </div>
                 </li>
@@ -50,7 +53,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 const screenSize = ref(window.innerWidth);
 const isNotMobile = computed(() => {
@@ -162,6 +165,10 @@ onMounted(() => {
             scrollableCardDragHandler()
         }
     });
+
+})
+
+onBeforeUnmount(() => {
 
 })
 
@@ -298,10 +305,13 @@ onMounted(() => {
 
             &.reminder {
                 color: #fff;
+                cursor: pointer;
+            }
 
+            .reminder {
                 &-title {
                     font-size: 1rem;
-                    font-weight: 500;
+                    font-weight: 600;
                     margin-bottom: 5px;
                 }
 
@@ -373,6 +383,7 @@ onMounted(() => {
             border-radius: 5px;
             background-color: #fff;
             margin-bottom: 20px;
+            cursor: pointer;
 
             &__time {
                 font-size: 1.15rem;
@@ -387,6 +398,7 @@ onMounted(() => {
                 border-radius: 5px;
                 position: relative;
                 margin-left: 15px;
+                transition: 0.3s all;
 
                 &:before {
                     content: "";
@@ -403,14 +415,29 @@ onMounted(() => {
 
                 &__title {
                     font-size: 1.25rem;
-                    font-weight: 500;
+                    font-weight: 600;
                     margin-bottom: 5px;
+                }
+
+                &__desc {
+                    font-size: 1rem;
+                    color: #365E70;
                 }
 
                 &__time-left {
                     font-size: 0.875rem;
                     font-weight: 500;
                     color: #bbb;
+                }
+            }
+
+            &:hover {
+                .reminder-item__body {
+                    background-color: #F1EAC2;
+
+                    &__time-left {
+                        // color: #365E70;
+                    }
                 }
             }
         }

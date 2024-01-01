@@ -30,6 +30,11 @@ const routes = [
                 name: "App Home Page",
                 component: () => import("@/views/pages/app/HomePage.vue"),
             },
+            {
+                path: "reminder/:id",
+                name: "App Reminder Detail Page",
+                component: () => import("@/views/pages/app/ReminderDetailPage.vue"),
+            },
         ],
     },
 
