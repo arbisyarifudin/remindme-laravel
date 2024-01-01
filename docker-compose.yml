@@ -1,0 +1,71 @@
+version: "3.7"
+
+networks:
+  remindme-network:
+    driver: bridge
+
+services:
+  # PostgreSQL Service
+  db:
+    image: postgres:14.6
+    container_name: remindme-pgsql-container
+    restart: unless-stopped
+    environment:
+    #   POSTGRES_DB: ${DB_DATABASE}
+    #   POSTGRES_USER: ${DB_USERNAME}
+    #   POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: remindme
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      SERVICE_NAME: postgres
+      SERVICE_TAGS: dev
+    ports:
+    #   - 5432:${DB_PORT}
+      - 5432:5432
+    volumes:
+      - ./.docker/postgres/data:/var/lib/postgresql/data
+      - ./.docker/postgres/db:/docker-entrypoint-initdb.d/
+      - ./.docker/postgres/postgres.conf:/etc/postgresql.conf
+    networks:
+      - remindme-network
+
+  # PHP Service
+  php:
+    build:
+      args:
+          user: arbi
+          uid: 1000
+      context: .docker
+      dockerfile: Dockerfile
+    image: remindme-php
+    container_name: remindme-php-container
+    restart: unless-stopped
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    tty: true
+    depends_on:
+      - db
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+      - ./.docker/php/php.ini:/usr/local/etc/php/conf.d/local.ini
+      - ./.docker/php/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+    networks:
+      - remindme-network
+
+  # NGINX Service
+  nginx:
+    image: nginx:1.17-alpine
+    container_name: remindme-nginx-container
+    restart: unless-stopped
+    ports:
+      - 9001:80
+    depends_on:
+      - php
+    volumes:
+      - ./:/var/www
+      - ./.docker/nginx:/etc/nginx/conf.d
+      - ./.docker/nginx/log:/var/log/nginx
+    networks:
+      - remindme-network
