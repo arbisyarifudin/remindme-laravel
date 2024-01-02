@@ -75,12 +75,12 @@ class ApiController extends Controller
         return 'ERR_INTERVAL_SERVER_ERROR';
     }
 
-    public function responseFailed($messages = '', $statusCode = 400)
+    public function responseFailed($messages = '', $statusCode = 400, $statusName = null)
     {
         return response()->json(
             [
                 'ok' => false,
-                'err' => $this->getErrorName($statusCode),
+                'err' => $statusName ? $statusName :$this->getErrorName($statusCode),
                 'msg' => $messages
             ],
             $statusCode

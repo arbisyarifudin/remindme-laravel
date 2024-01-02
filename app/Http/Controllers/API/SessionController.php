@@ -28,12 +28,12 @@ class SessionController extends ApiController
         $user = User::where('email', $validated['email'])->first();
 
         if (!$user) {
-            return $this->responseFailed('incorrect email or password', 401);
+            return $this->responseFailed('incorrect email or password', 401, 'ERR_INVALID_CREDENTIALS');
         }
 
         // validate password
         if (!\Hash::check($validated['password'], $user->password)) {
-            return $this->responseFailed('incorrect email or password', 401);
+            return $this->responseFailed('incorrect email or password', 401, 'ERR_INVALID_CREDENTIALS');
         }
 
         // create token for logged in user

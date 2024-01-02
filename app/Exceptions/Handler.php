@@ -29,6 +29,20 @@ class Handler extends ExceptionHandler
 
         $this->renderable(function (\Illuminate\Auth\AuthenticationException $e, $request) {
             if ($request->is('api/*')) {
+
+                // get ability middleware parameter
+                $action = $request->route()->getAction();
+                $ability = isset($action['middleware'][2]) ? $action['middleware'][2] : null;
+                if ($ability) {
+                    if ($ability == 'ability:' . \App\Enums\TokenAbility::ISSUE_ACCESS_TOKEN->value) {
+                        return response()->json([
+                            "ok" => false,
+                            "err" => "ERR_INVALID_REFRESH_TOKEN",
+                            "msg" => "invalid refresh token"
+                        ], 401);
+                    }
+                }
+
                 return response()->json([
                     "ok" => false,
                     "err" => "ERR_INVALID_ACCESS_TOKEN",
