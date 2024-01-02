@@ -36,17 +36,17 @@ class Handler extends ExceptionHandler
                 if ($ability) {
                     if ($ability == 'ability:' . \App\Enums\TokenAbility::ISSUE_ACCESS_TOKEN->value) {
                         return response()->json([
-                            "ok" => false,
-                            "err" => "ERR_INVALID_REFRESH_TOKEN",
-                            "msg" => "invalid refresh token"
+                            'ok' => false,
+                            'err' => 'ERR_INVALID_REFRESH_TOKEN',
+                            'msg' => 'invalid refresh token'
                         ], 401);
                     }
                 }
 
                 return response()->json([
-                    "ok" => false,
-                    "err" => "ERR_INVALID_ACCESS_TOKEN",
-                    "msg" => "invalid access token"
+                    'ok' => false,
+                    'err' => 'ERR_INVALID_ACCESS_TOKEN',
+                    'msg' => 'invalid access token'
                 ], 401);
             }
         });
@@ -55,9 +55,9 @@ class Handler extends ExceptionHandler
         $this->renderable(function (\Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException $e, $request) {
             if ($request->is('api/*')) {
                 return response()->json([
-                    "ok" => false,
-                    "err" => "ERR_FORBIDDEN_ACCESS",
-                    "msg" => "user doesn't have enough authorization"
+                    'ok' => false,
+                    'err' => 'ERR_FORBIDDEN_ACCESS',
+                    'msg' => 'user doesn\'t have access to this resource'
                 ], 403);
             }
         });
@@ -66,10 +66,40 @@ class Handler extends ExceptionHandler
         $this->renderable(function (\Symfony\Component\Routing\Exception\RouteNotFoundException $e, $request) {
             if ($request->is('api/*')) {
                 return response()->json([
-                    "ok" => false,
-                    "err" => "ERR_NOT_FOUND",
-                    "msg" => "resource not found"
+                    'ok' => false,
+                    'err' => 'ERR_NOT_FOUND',
+                    'msg' => 'resource not found'
                 ], 404);
+            }
+        });
+
+        // internal server error exception
+        $this->renderable(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, $request) {
+            if ($request->is('api/*')) {
+                $message = 'internal server error';
+                if (env('APP_DEBUG')) {
+                    $message = $e->getMessage();
+                }
+                return response()->json([
+                    'ok' => false,
+                    'err' => 'ERR_INTERNAL_SERVER_ERROR',
+                    'msg' => $message
+                ], 500);
+            }
+        });
+
+        // query exception
+        $this->renderable(function (\Illuminate\Database\QueryException $e, $request) {
+            if ($request->is('api/*')) {
+                $message = 'internal server error';
+                if (env('APP_DEBUG')) {
+                    $message = $e->getMessage();
+                }
+                return response()->json([
+                    'ok' => false,
+                    'err' => 'ERR_INTERNAL_SERVER_ERROR',
+                    'msg' => $message
+                ], 500);
             }
         });
     }

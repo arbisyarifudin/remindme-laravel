@@ -14,6 +14,10 @@ class ReminderController extends ApiController
 
         $validator = \Validator::make($request->all(), [
             'limit' => 'nullable|numeric',
+            'event_date' => 'nullable',
+            'sort' => 'nullable|array',
+            'sort.dir' => 'required_with:sort.name|in:asc,desc',
+            'sort.name' => 'required_with:sort.dir|in:title,event_at,remind_at',
         ]);
 
         if ($validator->fails()) {
@@ -22,6 +26,9 @@ class ReminderController extends ApiController
 
         $validated = $validator->validate();
         $limit = isset($validated['limit']) ? $validated['limit'] : 10;
+        $sortDir = isset($validated['sort']) ? $validated['sort']['dir'] : 'asc';
+        $sortName = isset($validated['sort']) ? $validated['sort']['name'] : 'event_at';
+        $eventDate = isset($validated['event_date']) ? $validated['event_date'] : '';
 
         $query = \DB::table('reminders')->select([
             'id',
@@ -34,6 +41,14 @@ class ReminderController extends ApiController
         if ($limit !== '') {
             $query->limit($limit);
         }
+
+        if ($eventDate !== '') {
+            $eventDate = strtotime($eventDate);
+            $query->where('event_at', '>=', $eventDate)
+                ->where('event_at', '<=', $eventDate + 86400); // 86400 = 1 day
+        }
+
+        $query->orderBy($sortName, $sortDir);
 
         $reminders = $query->get();
 

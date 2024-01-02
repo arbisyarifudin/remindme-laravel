@@ -30,7 +30,7 @@
         <div class="invalid-feedback" v-show="errorState?.password?.length > 0">{{ errorState?.password }}</div>
       </div>
 
-      <div class="alert alert-danger py-2" v-show="errorState?.other?.length">{{ errorState?.other }}</div>
+      <div class="alert alert-danger py-2 small" v-show="errorState?.other?.length">{{ errorState?.other }}</div>
 
       <div class="d-grid gap-2 mt-4">
         <button type="submit" class="btn btn-primary btn-lg" :disabled="loading">Login</button>
@@ -74,7 +74,7 @@ const onSubmitForm = () => {
       const { access_token, refresh_token, user } = response.data.data
       localStorage.setItem('accessToken', access_token)
       localStorage.setItem('refreshToken', refresh_token)
-      localStorage.setItem('user', user)
+      localStorage.setItem('user', JSON.stringify(user))
 
       setAuthHeader(access_token)
 
