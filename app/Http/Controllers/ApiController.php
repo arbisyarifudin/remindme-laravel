@@ -77,12 +77,11 @@ class ApiController extends Controller
 
     public function responseFailed($messages = '', $statusCode = 400)
     {
-
         return response()->json(
             [
                 'ok' => false,
                 'err' => $this->getErrorName($statusCode),
-                'msg' => $messages,
+                'msg' => $messages
             ],
             $statusCode
         );

@@ -42,8 +42,8 @@ class Handler extends ExceptionHandler
             if ($request->is('api/*')) {
                 return response()->json([
                     "ok" => false,
-                    "err" => "ERR_ACCESS_DENIED",
-                    "msg" => "access denied"
+                    "err" => "ERR_FORBIDDEN_ACCESS",
+                    "msg" => "user doesn't have enough authorization"
                 ], 403);
             }
         });

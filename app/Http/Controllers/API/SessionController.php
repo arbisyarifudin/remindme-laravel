@@ -14,7 +14,7 @@ class SessionController extends ApiController
     public function login(Request $request)
     {
         $validator = \Validator::make($request->all(), [
-            'email' => 'required|email|exists:users,email',
+            'email' => 'required|email',
             'password' => 'required',
         ]);
 
@@ -28,7 +28,7 @@ class SessionController extends ApiController
         $user = User::where('email', $validated['email'])->first();
 
         if (!$user) {
-            return $this->responseFailed('incorrect email or password', 422);
+            return $this->responseFailed('incorrect email or password', 401);
         }
 
         // validate password
@@ -44,11 +44,9 @@ class SessionController extends ApiController
         $refreshToken = $user->createToken('refresh_token', [TokenAbility::ISSUE_ACCESS_TOKEN->value], $refreshTokenExpiration)->plainTextToken;
 
         return $this->responseSuccess([
-            [
-                'user' => $user,
-                'access_token' => $accessToken,
-                'refresh_token' => $refreshToken,
-            ]
+            'user' => $user,
+            'access_token' => $accessToken,
+            'refresh_token' => $refreshToken,
         ], 200);
     }
 
