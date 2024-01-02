@@ -24,7 +24,8 @@
                     <button class="next"><i class="bi bi-chevron-right"></i></button>
                 </div>
                 <div class="scrollable-card__list">
-                    <div class="card reminder" v-for="i in 10" :key="i" @click="$router.push({ name: 'App Reminder Detail Page', params: { id: i } })">
+                    <div class="card reminder" v-for="i in 10" :key="i"
+                        @click="$router.push({ name: 'App Reminder Detail Page', params: { id: i } })">
                         <div class="card-body">
                             <div class="reminder-title">Meeting with Boss {{ i }}</div>
                             <div class="reminder-event-date"><i class="bi bi-clock"></i> 12:00 PM</div>
@@ -34,7 +35,8 @@
             </div>
 
             <ul class="reminder-list">
-                <li class="reminder-item" v-for="i in 15" :key="i" @click="$router.push({ name: 'App Reminder Detail Page', params: { id: i } })">
+                <li class="reminder-item" v-for="i in 15" :key="i"
+                    @click="$router.push({ name: 'App Reminder Detail Page', params: { id: i } })">
                     <div class="reminder-item__time">
                         11:30 AM
                     </div>
@@ -60,8 +62,8 @@ const isNotMobile = computed(() => {
     return screenSize.value > 768;
 });
 
+// button next/prev handler
 const scrollableCardButtonHandler = () => {
-    // scrollable card handler
     const scrollableCard = document.querySelector('.scrollable-card');
     const scrollableCardList = document.querySelector('.scrollable-card__list');
     const scrollableCardListItems = document.querySelectorAll('.scrollable-card__list .card');
@@ -150,26 +152,23 @@ const scrollableCardDragHandler = () => {
     });
 }
 
-onMounted(() => {
+let resizeHandler = () => {
     screenSize.value = window.innerWidth;
     if (isNotMobile.value) {
         scrollableCardButtonHandler()
         scrollableCardDragHandler()
     }
+}
 
-    window.addEventListener('resize', () => {
-        screenSize.value = window.innerWidth;
-
-        if (isNotMobile.value) {
-            scrollableCardButtonHandler()
-            scrollableCardDragHandler()
-        }
-    });
-
+onMounted(() => {
+    resizeHandler()
+    window.addEventListener('resize', resizeHandler);
 })
 
 onBeforeUnmount(() => {
-
+    if (resizeHandler) {
+        window.removeEventListener('resize', resizeHandler);
+    }
 })
 
 
