@@ -9,32 +9,65 @@ const instance = axios.create({
   }
 });
 
+let isRefreshing = false;
+
 function refreshAccessToken() {
+  if (isRefreshing) {
+    return;
+  }
+
   const refreshToken = localStorage.getItem('refreshToken');
+
+  if (!refreshToken) {
+    return;
+  }
+
+  isRefreshing = true;
+
   instance.put('/session', { refresh_token: refreshToken })
     .then(response => {
       console.log('Token refreshed:', response.data);
-      const { access_token } = response.data;
+      const { access_token, refresh_token } = response.data?.data || {};
       localStorage.setItem('accessToken', access_token);
+      localStorage.setItem('refreshToken', refresh_token);
+
+      // reload page
+      window.location.reload();
     })
     .catch(error => {
       console.error('Error refreshing token:', error);
-      // Menghapus token jika gagal memperbarui token
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
 
-      // Redirect ke halaman login
+      // delete token
+      localStorage.removeItem('accessToken')
+      //   localStorage.removeItem('refreshToken')
+
+      // redirect to login page
       window.location = '/login'
-    })
+    }).finally(() => {
+      isRefreshing = false;
+    });
 }
 
 // interceptors
 const currentPath = window.location.pathname;
 instance.interceptors.request.use(config => {
-  const token = localStorage.getItem('accessToken');
-  if (token && currentPath !== '/login') {
-    config.headers.Authorization = `Bearer ${token}`;
+  const url = config.url;
+  const method = config.method;
+
+  // if request is to refresh token, then add refresh token to header
+  if (url === '/session' && method === 'put') {
+    const token = localStorage.getItem('refreshToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  } else {
+    // if request is not to refresh token, then add access token to header
+    const token = localStorage.getItem('accessToken');
+    if (token && currentPath !== '/login') {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
+
   return config;
 }, error => {
   return Promise.reject(error);
@@ -45,7 +78,9 @@ instance.interceptors.response.use(
   error => {
     const responseData = error?.response?.data || {};
     if (error.response.status === 401) {
-      if (responseData?.err === 'ERR_INVALID_ACCESS_TOKEN') {
+
+      // if error is ERR_INVALID_ACCESS_TOKEN and isRefreshing is false, then refresh token
+      if (responseData?.err === 'ERR_INVALID_ACCESS_TOKEN' && !isRefreshing) {
         refreshAccessToken();
       }
     }
