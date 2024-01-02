@@ -26,5 +26,37 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+
+        $this->renderable(function (\Illuminate\Auth\AuthenticationException $e, $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    "ok" => false,
+                    "err" => "ERR_INVALID_ACCESS_TOKEN",
+                    "msg" => "invalid access token"
+                ], 401);
+            }
+        });
+
+        // access denied exception
+        $this->renderable(function (\Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException $e, $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    "ok" => false,
+                    "err" => "ERR_ACCESS_DENIED",
+                    "msg" => "access denied"
+                ], 403);
+            }
+        });
+
+        // route not found exception
+        $this->renderable(function (\Symfony\Component\Routing\Exception\RouteNotFoundException $e, $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    "ok" => false,
+                    "err" => "ERR_NOT_FOUND",
+                    "msg" => "resource not found"
+                ], 404);
+            }
+        });
     }
 }

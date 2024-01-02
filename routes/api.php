@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\TokenAbility;
 use App\Http\Controllers\API\ReminderController;
 use App\Http\Controllers\API\SessionController;
 use Illuminate\Http\Request;
@@ -21,11 +22,19 @@ use Illuminate\Support\Facades\Route;
 // });
 
 Route::post('session', [SessionController::class, 'login']);
+Route::middleware('auth:sanctum', 'ability:' . TokenAbility::ISSUE_ACCESS_TOKEN->value)->group(function () {
+    Route::put('session', [SessionController::class, 'refreshToken']);
+    Route::delete('session', [SessionController::class, 'logout']);
+});
 
-Route::prefix('reminders')->group(function ($routes) {
-    $routes->get('', [ReminderController::class, 'index']);
-    $routes->get('{id}', [ReminderController::class, 'show']);
-    $routes->post('', [ReminderController::class, 'store']);
-    $routes->put('{id}', [ReminderController::class, 'update']);
-    $routes->delete('{id}', [ReminderController::class, 'destroy']);
+Route::middleware('auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value)->group(function () {
+    Route::get('session', [SessionController::class, 'me']);
+
+    Route::prefix('reminders')->group(function ($routes) {
+        $routes->get('', [ReminderController::class, 'index']);
+        $routes->get('{id}', [ReminderController::class, 'show']);
+        $routes->post('', [ReminderController::class, 'store']);
+        $routes->put('{id}', [ReminderController::class, 'update']);
+        $routes->delete('{id}', [ReminderController::class, 'destroy']);
+    });
 });

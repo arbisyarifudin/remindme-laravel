@@ -83,7 +83,7 @@ class ReminderController extends ApiController
         // check reminder
         $reminder = Reminder::find($id);
         if (!$reminder) {
-            return $this->responseFailed('resource is not found', 404);
+            return $this->responseFailed('resource not found', 404);
         }
 
         return $this->responseSuccess($reminder, 200);
@@ -94,7 +94,7 @@ class ReminderController extends ApiController
         // check reminder
         $reminder = Reminder::find($id);
         if (!$reminder) {
-            return $this->responseFailed('resource is not found', 404);
+            return $this->responseFailed('resource not found', 404);
         }
 
         $validator = \Validator::make($request->all(), [
@@ -137,7 +137,7 @@ class ReminderController extends ApiController
         // check reminder
         $reminder = Reminder::find($id);
         if (!$reminder) {
-            return $this->responseFailed('resource is not found', 404);
+            return $this->responseFailed('resource not found', 404);
         }
 
         $reminder->delete();
