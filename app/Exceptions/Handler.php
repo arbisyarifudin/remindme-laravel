@@ -78,7 +78,7 @@ class Handler extends ExceptionHandler
             if ($request->is('api/*')) {
                 $message = 'internal server error';
                 if (env('APP_DEBUG')) {
-                    $message = $e->getMessage();
+                   $message = $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
                 }
                 return response()->json([
                     'ok' => false,
@@ -93,7 +93,22 @@ class Handler extends ExceptionHandler
             if ($request->is('api/*')) {
                 $message = 'internal server error';
                 if (env('APP_DEBUG')) {
-                    $message = $e->getMessage();
+                   $message = $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
+                }
+                return response()->json([
+                    'ok' => false,
+                    'err' => 'ERR_INTERNAL_SERVER_ERROR',
+                    'msg' => $message
+                ], 500);
+            }
+        });
+
+        // error exception
+        $this->renderable(function (\ErrorException $e, $request) {
+            if ($request->is('api/*')) {
+                $message = 'internal server error';
+                if (env('APP_DEBUG')) {
+                    $message = $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine();
                 }
                 return response()->json([
                     'ok' => false,
