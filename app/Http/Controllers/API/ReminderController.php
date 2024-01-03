@@ -48,6 +48,11 @@ class ReminderController extends ApiController
                 ->where('event_at', '<=', $eventDate + 86400); // 86400 = 1 day
         }
 
+        $user = \Auth::user();
+        if ($user) {
+            $query->where('user_id', $user->id);
+        }
+
         $query->orderBy($sortName, $sortDir);
 
         $reminders = $query->get();
