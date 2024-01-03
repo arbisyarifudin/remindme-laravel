@@ -8,6 +8,16 @@ use Illuminate\Http\Request;
 
 class ReminderController extends ApiController
 {
+    private $user;
+
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $this->user = \Auth::user();
+
+            return $next($request);
+        });
+    }
 
     public function index(Request $request)
     {
@@ -48,10 +58,11 @@ class ReminderController extends ApiController
                 ->where('event_at', '<=', $eventDate + 86400); // 86400 = 1 day
         }
 
-        $user = \Auth::user();
-        if ($user) {
-            $query->where('user_id', $user->id);
-        }
+        // $user = \Auth::user();
+        // if ($user) {
+        //     $query->where('user_id', $user->id);
+        // }
+        $query->where('user_id', $this->user->id);
 
         $query->orderBy($sortName, $sortDir);
 
@@ -81,6 +92,7 @@ class ReminderController extends ApiController
         // check if title and event_at already exists
         $check = Reminder::where('title', $validated['title'])
             ->where('event_at', $validated['event_at'])
+            ->where('user_id', $this->user->id)
             ->count();
 
         if ($check > 0) {
@@ -88,7 +100,7 @@ class ReminderController extends ApiController
         }
 
         $reminderCreated = Reminder::create([
-            'user_id' => 1,
+            'user_id' => $this->user->id,
             'title' => $validated['title'],
             'description' => $validated['description'],
             'event_at' => $validated['event_at'],
@@ -101,7 +113,7 @@ class ReminderController extends ApiController
     public function show($id)
     {
         // check reminder
-        $reminder = Reminder::find($id);
+        $reminder = Reminder::where('id', $id)->where('user_id', $this->user->id)->first();
         if (!$reminder) {
             return $this->responseFailed('resource not found', 404);
         }
@@ -112,7 +124,7 @@ class ReminderController extends ApiController
     public function update(Request $request, $id)
     {
         // check reminder
-        $reminder = Reminder::find($id);
+        $reminder = Reminder::where('id', $id)->where('user_id', $this->user->id)->first();
         if (!$reminder) {
             return $this->responseFailed('resource not found', 404);
         }
@@ -133,6 +145,7 @@ class ReminderController extends ApiController
         // check if title and event_at already exists
         $check = Reminder::where('title', $validated['title'])
             ->where('event_at', $validated['event_at'])
+            ->where('user_id', $this->user->id)
             ->whereNotIn('id', [$id])->count();
 
         if ($check > 0) {
@@ -140,7 +153,7 @@ class ReminderController extends ApiController
         }
 
         $reminder->update([
-            'user_id' => 1,
+            'user_id' => $this->user->id,
             'title' => $validated['title'],
             'description' => $validated['description'],
             'event_at' => $validated['event_at'],
