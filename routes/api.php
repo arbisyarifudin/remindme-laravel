@@ -24,11 +24,11 @@ use Illuminate\Support\Facades\Route;
 Route::post('session', [SessionController::class, 'login']);
 Route::middleware('auth:sanctum', 'ability:' . TokenAbility::ISSUE_ACCESS_TOKEN->value)->group(function () {
     Route::put('session', [SessionController::class, 'refreshToken']);
-    Route::delete('session', [SessionController::class, 'logout']);
 });
 
 Route::middleware('auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value)->group(function () {
     Route::get('session', [SessionController::class, 'me']);
+    Route::delete('session', [SessionController::class, 'logout']);
 
     Route::prefix('reminders')->group(function ($routes) {
         $routes->get('', [ReminderController::class, 'index']);
