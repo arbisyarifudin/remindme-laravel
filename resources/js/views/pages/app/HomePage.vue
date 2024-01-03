@@ -98,7 +98,7 @@
             Are you sure to logout?
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="button" class="btn btn-sm btn-primary" @click="logout" :disabled="logoutLoading">Logout</button>
           </div>
         </div>
@@ -112,6 +112,7 @@
 import { computed, inject, onBeforeUnmount, onMounted, ref, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import moment from 'moment'
+import { showToast } from '@/helpers/utils';
 
 const axios = inject('axios')
 
@@ -283,7 +284,7 @@ const logout = () => {
   axios.delete('session')
   .then(res => {
     // console.log('res', res.data)
-
+    showToast('success', 'Logout success!')
     logoutModal.hide()
     $router.replace({ name: 'Login Page' })
   })

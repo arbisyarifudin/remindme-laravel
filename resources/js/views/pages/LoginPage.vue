@@ -33,7 +33,12 @@
       <div class="alert alert-danger py-2 small" v-show="errorState?.other?.length">{{ errorState?.other }}</div>
 
       <div class="d-grid gap-2 mt-4">
-        <button type="submit" class="btn btn-primary btn-lg" :disabled="loading">Login</button>
+        <button type="submit" class="btn btn-primary btn-lg" :disabled="loading">
+          <div v-if="loading" class="spinner-grow spinner-grow-sm me-1" role="status" aria-hidden="true">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          Login
+        </button>
       </div>
 
     </form>
@@ -43,10 +48,11 @@
 <script setup>
 import { ref, inject } from 'vue';
 import { useRouter } from 'vue-router';
-import { mapErrorMessage } from '@/helpers/utils';
+import { mapErrorMessage, showToast } from '@/helpers/utils';
 
 const $router = useRouter();
 const axios = inject('axios')
+const bootstrap = inject('bootstrap')
 
 const formState = ref({
   email: '',
@@ -67,17 +73,26 @@ const onSubmitForm = () => {
     password: ''
   }
 
+  loading.value = true
+
   axios.post('/session', formState.value)
     .then(response => {
       console.log(response.data);
 
       const { access_token, refresh_token, user } = response.data.data
+
+      // save tokens and user to local storage
       localStorage.setItem('accessToken', access_token)
       localStorage.setItem('refreshToken', refresh_token)
       localStorage.setItem('user', JSON.stringify(user))
 
+      // set axios auth header with access token
       setAuthHeader(access_token)
 
+      // show toast
+      showToast('success', 'Login success!')
+
+      // bring user to home page
       $router.push({ name: 'App Home Page' });
     })
     .catch(error => {

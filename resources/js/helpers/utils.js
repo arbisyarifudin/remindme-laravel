@@ -1,4 +1,4 @@
-import { inject } from "vue"
+import { useToastStore } from '@/stores/toast'
 
 const getErrorMessage = (errors) => {
   if (errors?.length > 0) {
@@ -22,7 +22,16 @@ const mapErrorMessage = (errors = []) => {
   return resultErrors
 }
 
+const showToast = (type = 'success', message) => {
+  const toastStore = useToastStore()
+  toastStore.addToast({
+    type,
+    message,
+  })
+}
+
 export {
   getErrorMessage,
-  mapErrorMessage
+  mapErrorMessage,
+  showToast
 }
