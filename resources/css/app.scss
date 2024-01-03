@@ -1,3 +1,6 @@
+@import "bootstrap/scss/bootstrap";
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css");
+
 $primary: #003049;
 
 body {
@@ -7,7 +10,6 @@ body {
     color: #003049;
     font-family: 'Noto Sans', sans-serif;
 }
-
 
 .btn {
 
