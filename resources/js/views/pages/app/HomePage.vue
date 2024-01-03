@@ -6,7 +6,7 @@
           <button>⏲ RemindMe</button>
         </div>
         <div class="toolbar__nav">
-          <button><i class="bi bi-box-arrow-right"></i> Logout</button>
+          <button @click="showLogoutDialog"><i class="bi bi-box-arrow-right"></i> Logout</button>
         </div>
       </div>
 
@@ -52,8 +52,7 @@
         </div>
         <ul class="reminder-list" v-if="!loading[dateSelected] && reminderDateSelected.length">
           <li class="reminder-item" :class="[isDatePassed(reminder.event_at) ? 'passed' : '']"
-            v-for="reminder in reminderDateSelected" :key="reminder.id"
-            @click="openDetailPage(reminder)">
+            v-for="reminder in reminderDateSelected" :key="reminder.id" @click="openDetailPage(reminder)">
             <div class="reminder-item__time">
               <!-- 11:30 AM -->
               {{ getTime(reminder.event_at) }}
@@ -86,11 +85,31 @@
       </div>
 
     </div>
+
+    <!-- dialog logout bootstrap -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="logoutModalLabel">Logout</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            Are you sure to logout?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-sm btn-primary" @click="logout" :disabled="logoutLoading">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup>
-import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, ref, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import moment from 'moment'
 
@@ -248,6 +267,45 @@ const user = computed(() => {
 })
 
 
+/* LOGOUT */
+const bootstrap = inject('bootstrap')
+let logoutModal = null
+
+// Show the logout dialog
+const showLogoutDialog = () => {
+  // logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'))
+  logoutModal.show()
+}
+
+const logoutLoading = ref(false)
+const logout = () => {
+  logoutLoading.value = true
+  axios.delete('session')
+  .then(res => {
+    // console.log('res', res.data)
+
+    logoutModal.hide()
+    $router.replace({ name: 'Login Page' })
+  })
+  .catch(err => {
+      console.log('logout error:', err)
+  })
+  .finally(() => {
+    logoutLoading.value = false
+  })
+}
+
+onMounted(() => {
+  nextTick(() => {
+    logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'))
+
+    document.getElementById('logoutModal').addEventListener('hidden.bs.modal', event => {
+    //   console.log('event', event)
+    })
+  })
+})
+
+// close logout dialog listener
 
 
 /* SCROLLABLE CARD */
@@ -735,6 +793,7 @@ onBeforeUnmount(() => {
         .reminder-item__time {
           color: #ccc;
         }
+
         .reminder-item__body {
           &__title {
             text-decoration: line-through;
@@ -742,13 +801,13 @@ onBeforeUnmount(() => {
           }
 
           &__desc {
-              text-decoration: line-through;
-              color: #ccc;
-            }
+            text-decoration: line-through;
+            color: #ccc;
+          }
 
           &__time-left {
-              text-decoration: line-through;
-              color: #ccc;
+            text-decoration: line-through;
+            color: #ccc;
           }
         }
       }
