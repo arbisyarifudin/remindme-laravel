@@ -19,7 +19,7 @@
         <p>Today you won't forget the stuff you need to do.</p>
 
         <div class="scrollable-card__title" v-if="reminderUpcomings?.length > 0">
-          <h2>✨ Upcoming Reminders</h2>
+          <h2>📌 Upcoming Reminders</h2>
         </div>
       </div>
     </div>
@@ -46,7 +46,7 @@
       <div class="">
         <div class="reminder-list__toolbar">
           <div class="reminder-list__title">
-            <h3>📌 {{ getDateLabel(dateSelected) }}'s events</h3>
+            <h3>{{ dateSelected === 'today' ? '✨' : '📅'}} {{ getDateLabel(dateSelected) }}'s events</h3>
           </div>
           <select v-model="dateSelected" class="form-control">
             <option value="today">Today</option>
@@ -202,7 +202,7 @@ const reminderDateSelected = computed(() => reminders.value[dateSelected.value] 
 
 const datesFromNowOfMonth = computed(() => {
   const dates = []
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 15; i++) {
     dates.push(moment().add(i + 2, 'days').format('YYYY-MM-DD'))
   }
   return dates
@@ -603,7 +603,10 @@ const scrollableCardButtonHandler = () => {
   const scrollableCardWidth = scrollableCard.offsetWidth;
 
   const handleScrollableCard = () => {
-    if (scrollableCardList.scrollLeft <= 0) {
+    if (scrollableCardListItems.length < 2) {
+      prevBtn.disabled = true;
+      nextBtn.disabled = true;
+    } else if (scrollableCardList.scrollLeft <= 0) {
       prevBtn.disabled = true;
       nextBtn.disabled = false;
     } else if (
