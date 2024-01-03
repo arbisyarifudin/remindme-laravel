@@ -32,3 +32,14 @@ body {
         }
     }
 }
+
+.bg {
+    &-primary {
+        background-color: $primary !important;
+        color: #fff;
+
+        .btn-close {
+            color: #fff !important;
+        }
+    }
+}
