@@ -203,7 +203,7 @@ const reminderDateSelected = computed(() => reminders.value[dateSelected.value] 
 const datesFromNowOfMonth = computed(() => {
   const dates = []
   for (let i = 0; i < 30; i++) {
-    dates.push(moment().add(i + 1, 'days').format('YYYY-MM-DD'))
+    dates.push(moment().add(i + 2, 'days').format('YYYY-MM-DD'))
   }
   return dates
 })
@@ -288,8 +288,6 @@ const getDate = (timeOrDate = 0, format = 'DD MMM YYYY') => {
   }
 
   return moment(timeOrDate * 1000).format(format)
-
-
 }
 
 const getTime = (time = 0) => {
