@@ -28,16 +28,18 @@ class ReminderTableSeeder extends Seeder
             'today 09:00 am',
             'today 12:00 pm',
             'tomorrow 10:00 am',
-            '2024/01/04 20:00:00',
+            '+2 days 10:00 am',
+            '+3 days 10:00 am',
         ];
 
         foreach ($users as $user) {
             for ($i = 0; $i < 3; $i++) {
-                // get reminder event_at unix timestamp (int) from remindDates array
-                $eventAt = strtotime($remindDates[array_rand($remindDates)]);
+                // get eventAt as unix timestamp from $remindDates array of string
+                $randomIndex = array_rand($remindDates);
+                $eventAt = strtotime($remindDates[$randomIndex]);
 
-                // get remind_at unix timestamp (int) from event_at unix timestamp (int) minus 15 minutes
-                $remindAt = $eventAt - (15 * 60);
+                // get remindAt - 15 minutes as unix timestamp
+                $remindAt = strtotime('-15 minutes', $eventAt);
 
                 // get description with multiple paragraphs
                 $description = '';
@@ -46,7 +48,7 @@ class ReminderTableSeeder extends Seeder
                 }
 
                 Reminder::create([
-                    'title' => $faker->sentence,
+                    'title' => str_replace('.', '', $faker->sentence),
                     'user_id' => $user->id,
                     'description' => $description,
                     'remind_at' => $remindAt,
