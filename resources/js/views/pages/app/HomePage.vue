@@ -23,8 +23,8 @@
 
     <div class="home-main">
 
-      <div class="scrollable-card">
-        <div class="scrollable-card__nav" v-show="isNotMobile">
+      <div class="scrollable-card" :class="[!reminderUpcomings.length ? 'empty' : '']">
+        <div class="scrollable-card__nav" v-show="isNotMobile && reminderUpcomings.length">
           <button class="prev" disabled><i class="bi bi-chevron-left"></i></button>
           <button class="next"><i class="bi bi-chevron-right"></i></button>
         </div>
@@ -51,8 +51,9 @@
           </select>
         </div>
         <ul class="reminder-list" v-if="!loading[dateSelected] && reminderDateSelected.length">
-          <li class="reminder-item" v-for="reminder in reminderDateSelected" :key="reminder.id"
-            @click="$router.push({ name: 'App Reminder Detail Page', params: { id: reminder.id } })">
+          <li class="reminder-item" :class="[isDatePassed(reminder.event_at) ? 'passed' : '']"
+            v-for="reminder in reminderDateSelected" :key="reminder.id"
+            @click="openDetailPage(reminder)">
             <div class="reminder-item__time">
               <!-- 11:30 AM -->
               {{ getTime(reminder.event_at) }}
@@ -89,13 +90,24 @@
 </template>
 
 <script setup>
-import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import moment from 'moment'
 
 const axios = inject('axios')
 
+/* REMINDER */
 const reminders = ref([])
-const reminderUpcomings = computed(() => reminders.value?.upcoming?.slice(0, 3) || [])
+// const reminderUpcomings = computed(() => reminders.value?.upcoming?.slice(0, 3) || [])
+const reminderUpcomings = computed(() => {
+  // get upcoming reminder, but not yet passed
+  const upcomingReminders = reminders.value?.upcoming?.filter(reminder => {
+    return moment(reminder.event_at).isAfter(moment())
+  }) || []
+
+  // get upcoming reminder, but not yet passed, and limit to 3
+  return upcomingReminders.slice(0, 3)
+})
 
 const dateSelected = ref('today')
 const reminderDateSelected = computed(() => reminders.value[dateSelected.value] || [])
@@ -132,13 +144,15 @@ const getReminders = (params) => {
       console.log(res.data.data)
       // reminders.value = res.data.data?.reminders
       reminders.value[event_date] = res.data.data?.reminders
-
     })
     .catch(err => {
       console.log(err)
     })
     .finally(() => {
       loading.value[event_date] = false
+
+      scrollableCardButtonHandler()
+      scrollableCardDragHandler()
     })
 }
 
@@ -151,6 +165,12 @@ watch(dateSelected, (newVal, oldVal) => {
   console.log('dateSelected', newVal)
   getReminders({ event_date: newVal })
 })
+
+const $router = useRouter()
+const openDetailPage = (reminder) => {
+  if (isDatePassed(reminder.event_at)) return
+  $router.push({ name: 'App Reminder Detail Page', params: { id: reminder.id } })
+}
 
 /* METHOD HELPER */
 
@@ -212,6 +232,11 @@ const getDateLabel = (date = 'today') => {
   if (date === 'tomorrow') return 'Tomorrow'
   if (date === 'upcoming') return 'Upcoming'
   return moment(date).format('dddd, DD MMMM YYYY')
+}
+
+const isDatePassed = (time = 0) => {
+  if (!time) return false
+  return moment(time * 1000).isBefore(moment())
 }
 
 
@@ -284,6 +309,8 @@ const scrollableCardButtonHandler = () => {
     scrollableCardList.scrollLeft += scrollableCardWidth;
     handleScrollableCard();
   });
+
+
 }
 
 // touch/drag card item handler
@@ -346,13 +373,27 @@ onBeforeUnmount(() => {
   width: 700px;
   max-width: 100%;
   margin: 0 auto;
-//   height: 100vh;
+  //   height: 100vh;
   background-color: #fff;
   border-radius: 5px;
   overflow: hidden;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 
   min-height: 100vh;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+}
+
+.empty {
+  //   display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
 }
 
 .home {
@@ -451,6 +492,11 @@ onBeforeUnmount(() => {
   margin-right: -20px;
   margin-top: -80px;
   margin-bottom: 20px;
+
+  &.empty {
+    margin-top: -100px;
+    height: auto;
+  }
 
   &__title {
     margin-top: 30px;
@@ -575,8 +621,8 @@ onBeforeUnmount(() => {
 .reminder-list {
   padding: 0;
   list-style: none;
-//   height: calc(100vh - 340px);
-//   height: calc(100vh - 450px);
+  //   height: calc(100vh - 340px);
+  //   height: calc(100vh - 450px);
   overflow-y: auto;
 
   &__toolbar {
@@ -684,22 +730,30 @@ onBeforeUnmount(() => {
           }
         }
       }
+
+      &.passed {
+        .reminder-item__time {
+          color: #ccc;
+        }
+        .reminder-item__body {
+          &__title {
+            text-decoration: line-through;
+            color: #ccc;
+          }
+
+          &__desc {
+              text-decoration: line-through;
+              color: #ccc;
+            }
+
+          &__time-left {
+              text-decoration: line-through;
+              color: #ccc;
+          }
+        }
+      }
     }
   }
-}
-
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100px;
-}
-
-.empty {
-//   display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
 }
 </style>
 
