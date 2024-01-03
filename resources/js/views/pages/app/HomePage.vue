@@ -190,7 +190,7 @@ const reminders = ref([])
 const reminderUpcomings = computed(() => {
   // get upcoming reminder, but not yet passed
   const upcomingReminders = reminders.value?.upcoming?.filter(reminder => {
-    return moment(reminder.event_at).isAfter(moment())
+    return moment(reminder.event_at * 1000).isAfter(moment())
   }) || []
 
   // get upcoming reminder, but not yet passed, and limit to 3
@@ -259,6 +259,17 @@ const openDetailPage = (reminder) => {
   //   if (isDatePassed(reminder.event_at)) return
   $router.push({ name: 'App Reminder Detail Page', params: { id: reminder.id } })
 }
+
+watch($router.currentRoute, (currRoute) => {
+//   console.log('route change', currRoute)
+  if (currRoute.name === 'App Home Page') {
+    const queryParams = currRoute.query
+    if (queryParams?.needToRefresh === 'true') {
+        getReminders({ event_date: 'upcoming' })
+        getReminders({ event_date: dateSelected.value })
+    }
+  }
+})
 
 /* METHOD HELPER */
 

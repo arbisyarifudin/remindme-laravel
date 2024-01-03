@@ -12,7 +12,8 @@
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                         <li><a class="dropdown-item" href="#"><i class="bi bi-pencil-square me-1"></i> Edit</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-trash me-1"></i> Delete</a></li>
+                        <li><a class="dropdown-item" href="#" @click.prevent="showDeleteDialog"><i
+                                    class="bi bi-trash me-1"></i> Delete</a></li>
                     </ul>
                 </div>
             </div>
@@ -65,6 +66,26 @@
             </div>
 
         </div>
+
+        <!-- dialog delete -->
+        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="deleteModalLabel">Delete Reminder</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure to delete this reminder?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-sm btn-primary" @click="deleteReminder"
+                            :disabled="deleteLoading">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -75,6 +96,7 @@ import moment from 'moment'
 import { showToast } from '../../../helpers/utils';
 
 const axios = inject('axios')
+const bootstrap = inject('bootstrap')
 
 const detailState = ref({
     id: 1,
@@ -83,6 +105,55 @@ const detailState = ref({
     event_at: '2021-09-01 10:00:00',
     remind_at: '2021-09-01 09:55:00',
 })
+
+const loading = ref(false)
+
+const $router = useRouter()
+const fetchDetail = async () => {
+
+    // fetch detail from api
+    const id = $router.currentRoute.value.params.id
+
+    loading.value = true
+    await axios.get('/reminders/' + id)
+        .then(res => {
+            console.log('res', res.data)
+            detailState.value = res.data.data
+        })
+        .catch(err => {
+            console.log(err)
+
+            // if status 404, redirect to home page
+            // else, show error message
+            if (err?.response?.status === 404) {
+                showToast('danger', 'Reminder not found!')
+                $router.push({ name: 'App Home Page' })
+            } else {
+                showToast('danger', 'Something went wrong!')
+            }
+        })
+        .finally(() => {
+            loading.value = false
+        })
+}
+
+onMounted(() => {
+    nextTick(async () => {
+        await fetchDetail()
+
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })
+})
+
+watch(() => $router.currentRoute.value.params.id, (newId) => {
+    // detailState.value = {}
+    if (newId && parseInt(newId) !== detailState.value.id) {
+        fetchDetail()
+    }
+})
+
+/* HELPER METHOD */
 
 const getTime = (unixtTime = 0) => {
     if (!unixtTime) return ''
@@ -154,54 +225,42 @@ const getReminderTimeLabel = (unixtTime) => {
     return ''
 }
 
-const loading = ref(false)
+/* DELETE */
+let deleteModal = null
 
-const $router = useRouter()
-const fetchDetail = async () => {
+// Show the delete dialog
+const showDeleteDialog = () => {
+    deleteModal.show()
+}
 
-    // fetch detail from api
-    const id = $router.currentRoute.value.params.id
-
-    loading.value = true
-    await axios.get('/reminders/' + id)
+const deleteLoading = ref(false)
+const deleteReminder = () => {
+    deleteLoading.value = true
+    axios.delete('/reminders/' + detailState.value.id)
         .then(res => {
-            console.log('res', res.data)
-            detailState.value = res.data.data
+            // console.log('res', res.data)
+            showToast('success', 'Reminder deleted successfully!')
+            deleteModal.hide()
+
+            // redirect to home page
+            $router.push({ name: 'App Home Page', query: { needToRefresh: true } })
         })
         .catch(err => {
-            console.log(err)
-
-            // if status 404, redirect to home page
-            // else, show error message
-            if (err?.response?.status === 404) {
-                showToast('danger', 'Reminder not found!')
-                $router.push({ name: 'App Home Page' })
-            } else {
-                showToast('danger', 'Something went wrong!')
-            }
+            console.log('delete error:', err)
         })
         .finally(() => {
-            loading.value = false
+            deleteLoading.value = false
         })
 }
 
-const bootstrap = inject('bootstrap')
 onMounted(() => {
-    nextTick(async () => {
-        await fetchDetail()
-
-        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    nextTick(() => {
+        deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'))
+        document.getElementById('deleteModal').addEventListener('hidden.bs.modal', event => {
+            //   console.log('event', event)
+        })
     })
 })
-
-watch(() => $router.currentRoute.value.params.id, (newId) => {
-    // detailState.value = {}
-    if (newId && parseInt(newId) !== detailState.value.id) {
-        fetchDetail()
-    }
-})
-
 
 </script>
 
