@@ -17,17 +17,27 @@
                 </div>
             </div>
 
-            <div class="info">
-                <h1>Meeting with Boss {{ $route.params.id }}</h1>
+            <div class="info" v-if="!loading">
+                <h1>{{ detailState.title }}</h1>
                 <div class="d-flex align-items-center justify-content-between">
-                    <div class="info__time">
-                        <div class="clock"><i class="bi bi-clock"></i> 12:30PM</div>
-                        <div class="day">Today</div>
+                    <div class="info__time" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                        :data-bs-title="getDate(detailState.event_at)">
+                        <div class="clock"><i class="bi bi-clock"></i> {{ getTime(detailState.event_at) }}</div>
+                        <!-- <div class="day">Today</div> -->
+                        <div class="day">{{ getDateLabel(detailState.event_at) }}</div>
                     </div>
-                    <div class="info__notif">
+                    <div class="info__notif" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                        data-bs-title="Reminder time">
                         <i class="bi bi-bell"></i>
-                        <span class="ms-2">5 minutes before</span>
+                        <!-- <span class="ms-2">5 minutes before</span> -->
+                        <span class="ms-2">{{ getReminderTimeLabel(detailState.remind_at) }}</span>
                     </div>
+                </div>
+            </div>
+
+            <div class="loading" v-else>
+                <div class="spinner-border text-secondary" role="status">
+                    <span class="visually-hidden">Loading...</span>
                 </div>
             </div>
         </div>
@@ -41,15 +51,16 @@
                         Notes
                     </div>
                 </div>
-                <div class="card-body">
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Veritatis praesentium quas quos ab ex
+                <div class="card-body" v-if="!loading">
+                    <!-- <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Veritatis praesentium quas quos ab ex
                         doloribus blanditiis at impedit eos deserunt, dolorum id consequuntur odio eum aliquam corrupti!
                         Fugiat, minima quos!</p>
                     <ul>
                         <li>Lorem, ipsum dolor sit amet consectetur adipisicing elit.</li>
                         <li>Lorem, ipsum dolor sit amet consectetur adipisicing elit.</li>
                         <li>Lorem, ipsum dolor sit amet consectetur adipisicing elit.</li>
-                    </ul>
+                    </ul> -->
+                    <span v-html="detailState.description"></span>
                 </div>
             </div>
 
@@ -58,6 +69,138 @@
 </template>
 
 <script setup>
+import { ref, inject, onMounted, watch, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
+import moment from 'moment'
+import { showToast } from '../../../helpers/utils';
+
+const axios = inject('axios')
+
+const detailState = ref({
+    id: 1,
+    title: 'Meeting with client',
+    description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Veritatis praesentium quas quos ab ex doloribus blanditiis at impedit eos deserunt, dolorum id consequuntur odio eum aliquam corrupti! Fugiat, minima quos!',
+    event_at: '2021-09-01 10:00:00',
+    remind_at: '2021-09-01 09:55:00',
+})
+
+const getTime = (unixtTime = 0) => {
+    if (!unixtTime) return ''
+    return moment(unixtTime * 1000).format('hh:mm A')
+}
+
+const getDate = (unixtTime = 0) => {
+    if (!unixtTime) return ''
+    return moment(unixtTime * 1000).format('dddd, DD MMMM YYYY')
+}
+
+const getDateLabel = (unixTimeOrDate = 0, format = 'DD MMMM YYYY') => {
+    if (!unixTimeOrDate) return moment().format(format)
+
+    let date
+
+    // check is date or time
+    if (typeof unixTimeOrDate === 'string' && unixTimeOrDate.includes('-')) {
+        date = moment(unixTimeOrDate).format(format)
+    }
+
+    date = moment(unixTimeOrDate * 1000).format(format)
+
+    // check is today
+    if (moment().format(format) === date) {
+        return 'Today'
+    }
+
+    return date
+}
+
+const getReminderTimeLabel = (unixtTime) => {
+    if (!unixtTime) return ''
+
+    // event_at - remind_at = reminder time
+    const eventAt = moment(detailState.value.event_at * 1000)
+    const remindAt = moment(detailState.value.remind_at * 1000)
+
+    const diff = eventAt.diff(remindAt, 'minutes')
+
+    if (diff === 0) {
+        return 'At time of event'
+    }
+
+    if (diff === 1) {
+        return '1 minute before'
+    }
+
+    if (diff > 1 && diff < 60) {
+        return `${diff} minutes before`
+    }
+
+    if (diff === 60) {
+        return '1 hour before'
+    }
+
+    if (diff > 60 && diff < 1440) {
+        return `${Math.floor(diff / 60)} hours before`
+    }
+
+    if (diff === 1440) {
+        return '1 day before'
+    }
+
+    if (diff > 1440) {
+        return `${Math.floor(diff / 1440)} days before`
+    }
+
+    return ''
+}
+
+const loading = ref(false)
+
+const $router = useRouter()
+const fetchDetail = async () => {
+
+    // fetch detail from api
+    const id = $router.currentRoute.value.params.id
+
+    loading.value = true
+    await axios.get('/reminders/' + id)
+        .then(res => {
+            console.log('res', res.data)
+            detailState.value = res.data.data
+        })
+        .catch(err => {
+            console.log(err)
+
+            // if status 404, redirect to home page
+            // else, show error message
+            if (err?.response?.status === 404) {
+                showToast('danger', 'Reminder not found!')
+                $router.push({ name: 'App Home Page' })
+            } else {
+                showToast('danger', 'Something went wrong!')
+            }
+        })
+        .finally(() => {
+            loading.value = false
+        })
+}
+
+const bootstrap = inject('bootstrap')
+onMounted(() => {
+    nextTick(async () => {
+        await fetchDetail()
+
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })
+})
+
+watch(() => $router.currentRoute.value.params.id, (newId) => {
+    // detailState.value = {}
+    if (newId && parseInt(newId) !== detailState.value.id) {
+        fetchDetail()
+    }
+})
 
 
 </script>
@@ -72,6 +215,20 @@
     border-radius: 5px;
     overflow: hidden;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+}
+
+.empty {
+    //   display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
 }
 
 .detail {
@@ -112,9 +269,7 @@
                 }
             }
 
-            &__nav {
-
-            }
+            &__nav {}
 
             &__title {
                 font-size: 1.25rem;
@@ -127,7 +282,7 @@
             color: #EAE2B7;
 
             h1 {
-                font-size: 2.5rem;
+                font-size: 2rem;
                 margin-bottom: 10px;
                 font-weight: 600;
 
