@@ -128,7 +128,7 @@ const fetchDetail = async () => {
             detailState.value = res.data.data
         })
         .catch(err => {
-            console.log(err)
+            console.log('Fetch Detail Error', err)
 
             // if status 404, redirect to home page
             // else, show error message

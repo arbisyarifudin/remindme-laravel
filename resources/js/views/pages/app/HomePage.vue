@@ -170,12 +170,12 @@ const getReminders = (params) => {
     }
   })
     .then(res => {
-      console.log(res.data.data)
+    //   console.log(res.data.data)
       // reminders.value = res.data.data?.reminders
       reminders.value[event_date] = res.data.data?.reminders
     })
     .catch(err => {
-      console.log(err)
+      console.log('Get Reminder Err', err)
     })
     .finally(() => {
       loading.value[event_date] = false
@@ -186,6 +186,7 @@ const getReminders = (params) => {
 }
 
 onMounted(() => {
+// init reminders data
   getReminders({ event_date: 'upcoming' })
   getReminders({ event_date: dateSelected.value })
 })
@@ -303,6 +304,12 @@ const logout = () => {
       // console.log('res', res.data)
       showToast('success', 'Logout success!')
       logoutModal.hide()
+
+      // remove tokens and user from local storage
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+        localStorage.removeItem('user')
+
       $router.replace({ name: 'Login Page' })
     })
     .catch(err => {

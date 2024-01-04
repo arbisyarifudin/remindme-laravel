@@ -2,7 +2,7 @@
   <div class="login-wrapper">
 
     <div class="back">
-      <button class="btn btn-light btn-sm" @click="$router.go(-1)">
+      <button class="btn btn-light btn-sm" @click="$router.push({ name: 'Home Page' })">
         <i class="bi bi-arrow-left"></i>
         Back
       </button>
@@ -46,7 +46,7 @@
 </template>
 
 <script setup>
-import { ref, inject } from 'vue';
+import { ref, inject, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { mapErrorMessage, showToast } from '@/helpers/utils';
 
@@ -116,6 +116,16 @@ const onSubmitForm = () => {
 function setAuthHeader(accessToken) {
   axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 }
+
+onMounted(() => {
+    // check if user is already logged in
+    const accessToken = localStorage.getItem('accessToken')
+    const user = JSON.parse(localStorage.getItem('user'))
+    if (accessToken && user) {
+        setAuthHeader(accessToken)
+        $router.push({ name: 'App Home Page' });
+    }
+})
 
 </script>
 

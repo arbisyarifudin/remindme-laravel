@@ -307,7 +307,7 @@ const __submitAdd = async (submitData) => {
 const __submitEdit = async (submitData) => {
     return await axios.put('/reminders/' + $props.data.id, submitData)
         .then(res => {
-            console.log(res.data.data)
+            // console.log(res.data.data)
 
             showToast('success', 'Reminder updated!')
             formReminderDialogModal.hide()
@@ -327,7 +327,7 @@ const __submitEdit = async (submitData) => {
 }
 
 const errorHandler = (err) => {
-    console.log(err)
+    console.log('Form Error',err)
     const messages = err?.response?.data?.msg
     if (typeof messages === 'object') {
         errorState.value = mapErrorMessage(err?.response?.data?.msg)

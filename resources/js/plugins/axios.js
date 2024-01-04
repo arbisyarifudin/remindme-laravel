@@ -19,6 +19,8 @@ function refreshAccessToken() {
   const refreshToken = localStorage.getItem('refreshToken');
 
   if (!refreshToken) {
+    // redirect to login page
+    window.location = '/login'
     return;
   }
 
@@ -39,7 +41,9 @@ function refreshAccessToken() {
 
       // delete token
       localStorage.removeItem('accessToken')
-      //   localStorage.removeItem('refreshToken')
+    //   localStorage.removeItem('refreshToken')
+      localStorage.removeItem('user')
+
 
       // redirect to login page
       window.location = '/login'
@@ -78,15 +82,24 @@ instance.interceptors.response.use(
   error => {
     const responseData = error?.response?.data || {};
     if (error.response.status === 401) {
-
       // if error is ERR_INVALID_ACCESS_TOKEN and isRefreshing is false, then refresh token
       if (responseData?.err === 'ERR_INVALID_ACCESS_TOKEN' && !isRefreshing) {
         refreshAccessToken();
+      } else {
+        // delete token
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+        localStorage.removeItem('user')
+
+        // redirect to login page
+        window.location = '/login'
       }
     }
 
     return Promise.reject(error)
   }
 )
+
+
 
 export default instance;
