@@ -3,7 +3,7 @@
         <div class="detail-header">
             <div class="toolbar">
                 <div class="toolbar__back">
-                    <button class="btn text-white" @click="$router.go(-1)"><i class="bi bi-arrow-left"></i></button>
+                    <button class="btn text-white" @click="backToHomePage"><i class="bi bi-arrow-left"></i></button>
                 </div>
                 <div class="toolbar__title">Reminder Details</div>
                 <div class="toolbar__nav">
@@ -11,7 +11,8 @@
                         <i class="bi bi-three-dots"></i>
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-pencil-square me-1"></i> Edit</a></li>
+                        <li><a class="dropdown-item" href="#" @click.prevent="showEditReminderDialog"><i
+                                    class="bi bi-pencil-square me-1"></i> Edit</a></li>
                         <li><a class="dropdown-item" href="#" @click.prevent="showDeleteDialog"><i
                                     class="bi bi-trash me-1"></i> Delete</a></li>
                     </ul>
@@ -86,6 +87,10 @@
                 </div>
             </div>
         </div>
+
+        <!-- dialog edit reminder -->
+        <FormReminder :is-edit-mode="true" :data="editReminderState" :show="editReminderDialogShow"
+            @close="editReminderDialogShow = false" @success="onSuccessEditReminderSubmission" />
     </div>
 </template>
 
@@ -93,7 +98,9 @@
 import { ref, inject, onMounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import moment from 'moment'
-import { showToast } from '../../../helpers/utils';
+import { showToast } from '@/helpers/utils';
+
+import FormReminder from '@/views/components/FormReminder.vue';
 
 const axios = inject('axios')
 const bootstrap = inject('bootstrap')
@@ -261,6 +268,34 @@ onMounted(() => {
         })
     })
 })
+
+/* EDIT REMINDER */
+const editReminderDialogShow = ref(false)
+const editReminderState = ref({})
+const showEditReminderDialog = () => {
+    editReminderDialogShow.value = true
+    editReminderState.value = {
+        ...detailState.value,
+        remind_at: getReminderTimeLabel(detailState.value.remind_at),
+    }
+}
+
+const onSuccessEditReminderSubmission = (payload) => {
+    editReminderDialogShow.value = false
+    detailState.value = payload
+
+    // set edit succeded to true, so we can refresh the home page if user click the back button
+    editSucceded.value = true
+}
+
+const editSucceded = ref(false)
+const backToHomePage = () => {
+    // redirect to home page, with query needToRefresh (true/false) -> handler in AppHomePage.vue
+    $router.push({ name: 'App Home Page', query: { needToRefresh: editSucceded.value } })
+
+    // reset edit succeded to false
+    editSucceded.value = false
+}
 
 </script>
 

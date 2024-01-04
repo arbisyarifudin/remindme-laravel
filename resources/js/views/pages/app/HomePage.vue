@@ -9,7 +9,7 @@
           <button>⏲ RemindMe</button>
         </div>
         <div class="toolbar__nav">
-          <button class="btn-add" @click="showFormReminderDialog"><i class="bi bi-plus"></i> New</button>
+          <button class="btn-add" @click="showAddReminderDialog"><i class="bi bi-plus"></i> New</button>
         </div>
       </div>
 
@@ -119,7 +119,7 @@
 import { computed, inject, onBeforeUnmount, onMounted, ref, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import moment from 'moment'
-import { showToast, mapErrorMessage } from '@/helpers/utils';
+import { showToast } from '@/helpers/utils';
 
 import FormReminder from '@/views/components/FormReminder.vue';
 
@@ -322,9 +322,9 @@ onMounted(() => {
   })
 })
 
-/* FORM REMINDER */
+/* ADD REMINDER */
 const addReminderDialogShow = ref(false)
-const showFormReminderDialog = () => {
+const showAddReminderDialog = () => {
   addReminderDialogShow.value = true
 }
 

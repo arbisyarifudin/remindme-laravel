@@ -43,3 +43,12 @@ body {
         }
     }
 }
+
+.dropdown {
+    &-item {
+        &.active, &:active {
+            background-color: $primary;
+            color: #fff;
+        }
+    }
+}
