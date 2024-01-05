@@ -37,13 +37,24 @@ jobs:
         mkdir -p database
         touch database/database.sqlite
 
-    - name: Execute database migrations
+    - name: Run database migrations
       env:
         DB_CONNECTION: sqlite
         DB_DATABASE: database/database.sqlite
       run: php artisan migrate --force --seed --env=testing
 
-    - name: Execute tests (Unit and Feature tests) with Artisan
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Build Frontend
+      run: npm run build
+
+    - name: Run tests
       env:
         DB_CONNECTION: sqlite
         DB_DATABASE: database/database.sqlite
