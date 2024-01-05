@@ -11,17 +11,13 @@ services:
     container_name: remindme-pgsql-container
     restart: unless-stopped
     environment:
-    #   POSTGRES_DB: ${DB_DATABASE}
-    #   POSTGRES_USER: ${DB_USERNAME}
-    #   POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: remindme
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       SERVICE_NAME: postgres
       SERVICE_TAGS: dev
     ports:
-    #   - 5432:${DB_PORT}
-      - 5432:5432
+      - 5432:${DB_PORT}
     volumes:
       - ./.docker/postgres/data:/var/lib/postgresql/data
       - ./.docker/postgres/db:/docker-entrypoint-initdb.d/
@@ -35,15 +31,20 @@ services:
       args:
           user: arbi
           uid: 1000
-      context: .docker
+      context: .
       dockerfile: Dockerfile
-    image: remindme-php
+    image: remindme-laravel
     container_name: remindme-php-container
     restart: unless-stopped
     environment:
       SERVICE_NAME: app
       SERVICE_TAGS: dev
+      DB_HOST: db
+      APP_URL: "http://localhost:9001"
     tty: true
+    ports:
+      - 9000:9000
+      - 5173:5173 # for vite dev server
     depends_on:
       - db
     working_dir: /var/www/
@@ -51,6 +52,8 @@ services:
       - ./:/var/www
       - ./.docker/php/php.ini:/usr/local/etc/php/conf.d/local.ini
       - ./.docker/php/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+    command: >
+      sh -c "cp .env.example .env && php artisan migrate --force --seed && php-fpm"
     networks:
       - remindme-network
 

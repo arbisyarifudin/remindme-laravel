@@ -26,21 +26,52 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# Install nodejs
+RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
+
 # Create system user to run Composer and Artisan Commands
 RUN useradd -G www-data,root -u $uid -d /home/$user $user
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user
 
 # Copy startup script into the image
-COPY startup.sh /usr/local/bin/startup.sh
+# COPY startup.sh /usr/local/bin/startup.sh
 
 # Make the startup script executable
-RUN chmod +x /usr/local/bin/startup.sh
+# RUN chmod +x /usr/local/bin/startup.sh\
 
 # Set working directory
 WORKDIR /var/www
 
-# Run the startup script when the container starts
-CMD ["/usr/local/bin/startup.sh"]
+# Copy composer files
+COPY composer.json composer.lock ./
 
+# Copy npm files
+COPY package.json package-lock.json ./
+
+# Copy project files
+COPY . .
+
+# Rename .env.example to .env
+RUN mv .env.example .env
+
+# Set environment variable to allow Composer plugins to run as superuser
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
+# Run composer install and npm install
+RUN composer install --no-interaction
+RUN npm install --legacy-peer-deps
+
+# Run artisan commands
+RUN php artisan key:generate
+# RUN php artisan migrate --force --seed
+
+# Build assets
+RUN npm run build
+
+# Run the startup script when the container starts
+# CMD ["/usr/local/bin/startup.sh"]
+
+# Set user and expose port for php-fpm
 USER $user
