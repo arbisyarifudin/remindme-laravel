@@ -103,7 +103,11 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-sm btn-primary" @click="logout" :disabled="logoutLoading">Logout</button>
+            <button type="button" class="btn btn-sm btn-primary" @click="logout" :disabled="logoutLoading">
+                <span v-if="logoutLoading" class="spinner-border spinner-border-sm" role="status"
+                    aria-hidden="true"></span>
+                Logout
+            </button>
           </div>
         </div>
       </div>
