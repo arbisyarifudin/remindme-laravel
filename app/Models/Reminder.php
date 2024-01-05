@@ -46,4 +46,10 @@ class Reminder extends Model
         'created_at',
         'updated_at'
     ];
+
+    /* RELATIONS */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

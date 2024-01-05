@@ -18,6 +18,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->bigInteger('event_at');
             $table->bigInteger('remind_at')->nullable();
+            $table->boolean('is_sent')->default(false);
             $table->timestamps();
 
         });
