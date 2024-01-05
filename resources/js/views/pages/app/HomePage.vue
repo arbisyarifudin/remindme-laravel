@@ -51,7 +51,7 @@
           <select v-model="dateSelected" class="form-control">
             <option value="today">Today</option>
             <option value="tomorrow">Tomorrow</option>
-            <option :value="date" v-for="date in datesFromNowOfMonth">{{ getDate(date, 'DD/MM/YYYY') }}</option>
+            <option :value="date" v-for="date in datesFromNowOfMonth" :key="date">{{ getDate(date, 'DD/MM/YYYY') }}</option>
           </select>
         </div>
         <ul class="reminder-list" v-if="!loading[dateSelected] && reminderDateSelected.length">
@@ -123,9 +123,9 @@
 import { computed, inject, onBeforeUnmount, onMounted, ref, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import moment from 'moment'
-import { showToast } from '@/helpers/utils';
+import { showToast } from '@/helpers/utils'
 
-import FormReminder from '@/views/components/FormReminder.vue';
+import FormReminder from '@/views/components/FormReminder.vue'
 
 const axios = inject('axios')
 
@@ -159,13 +159,13 @@ const loading = ref({
   upcoming: true
 })
 const getReminders = (params) => {
-  const { event_date, limit } = params || { event_date: 'today' }
+  const { event_date: eventDate, limit } = params || { event_date: 'today' }
 
-  loading.value[event_date] = true
+  loading.value[eventDate] = true
   axios.get('/reminders', {
     params: {
       // event_date: 'today' // today, tomorrow, selected_date
-      event_date: event_date === 'upcoming' ? 'today' : event_date,
+      event_date: eventDate === 'upcoming' ? 'today' : eventDate,
       limit,
       sort: {
         dir: 'asc',
@@ -176,13 +176,13 @@ const getReminders = (params) => {
     .then(res => {
     //   console.log(res.data.data)
       // reminders.value = res.data.data?.reminders
-      reminders.value[event_date] = res.data.data?.reminders
+      reminders.value[eventDate] = res.data.data?.reminders
     })
     .catch(err => {
       console.log('Get Reminder Err', err)
     })
     .finally(() => {
-      loading.value[event_date] = false
+      loading.value[eventDate] = false
 
       scrollableCardButtonHandler()
       scrollableCardDragHandler()
@@ -211,8 +211,8 @@ watch($router.currentRoute, (currRoute) => {
   if (currRoute.name === 'App Home Page') {
     const queryParams = currRoute.query
     if (queryParams?.needToRefresh === 'true') {
-        getReminders({ event_date: 'upcoming' })
-        getReminders({ event_date: dateSelected.value })
+      getReminders({ event_date: 'upcoming' })
+      getReminders({ event_date: dateSelected.value })
     }
   }
 })
@@ -282,14 +282,12 @@ const isDatePassed = (time = 0) => {
   return moment(time * 1000).isBefore(moment())
 }
 
-
 /* USER */
 const user = computed(() => {
   const user = localStorage.getItem('user')
   if (!user) return null
   return JSON.parse(user)
 })
-
 
 /* LOGOUT */
 const bootstrap = inject('bootstrap')
@@ -310,9 +308,9 @@ const logout = () => {
       logoutModal.hide()
 
       // remove tokens and user from local storage
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-        localStorage.removeItem('user')
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
+      localStorage.removeItem('user')
 
       $router.replace({ name: 'Login Page' })
     })
@@ -347,10 +345,10 @@ const onSuccessAddReminderSubmission = () => {
 
 /* SCROLLABLE CARD */
 
-const screenSize = ref(window.innerWidth);
+const screenSize = ref(window.innerWidth)
 const isNotMobile = computed(() => {
-  return screenSize.value >= 768;
-});
+  return screenSize.value >= 768
+})
 
 watch(isNotMobile, (newVal, oldVal) => {
   console.log('isNotMobile', newVal)
@@ -364,89 +362,87 @@ watch(isNotMobile, (newVal, oldVal) => {
 const scrollableCardButtonHandler = () => {
   if (!isNotMobile.value) return
 
-  const scrollableCard = document.querySelector('.scrollable-card');
-  const scrollableCardList = document.querySelector('.scrollable-card__list');
-  const scrollableCardListItems = document.querySelectorAll('.scrollable-card__list .card');
+  const scrollableCard = document.querySelector('.scrollable-card')
+  const scrollableCardList = document.querySelector('.scrollable-card__list')
+  const scrollableCardListItems = document.querySelectorAll('.scrollable-card__list .card')
 
-  const prevBtn = document.querySelector('.scrollable-card__nav .prev');
-  const nextBtn = document.querySelector('.scrollable-card__nav .next');
+  const prevBtn = document.querySelector('.scrollable-card__nav .prev')
+  const nextBtn = document.querySelector('.scrollable-card__nav .next')
 
   if (!scrollableCard || !scrollableCardList || !scrollableCardListItems || !prevBtn || !nextBtn) {
-    return;
+    return
   }
 
-  const scrollableCardWidth = scrollableCard.offsetWidth;
+  const scrollableCardWidth = scrollableCard.offsetWidth
 
   const handleScrollableCard = () => {
     if (scrollableCardListItems.length < 2) {
-      prevBtn.disabled = true;
-      nextBtn.disabled = true;
+      prevBtn.disabled = true
+      nextBtn.disabled = true
     } else if (scrollableCardList.scrollLeft <= 0) {
-      prevBtn.disabled = true;
-      nextBtn.disabled = false;
+      prevBtn.disabled = true
+      nextBtn.disabled = false
     } else if (
       scrollableCardList.scrollLeft + scrollableCardList.offsetWidth >=
       scrollableCardList.scrollWidth
     ) {
-      prevBtn.disabled = false;
-      nextBtn.disabled = true;
+      prevBtn.disabled = false
+      nextBtn.disabled = true
     } else {
-      prevBtn.disabled = false;
-      nextBtn.disabled = false;
+      prevBtn.disabled = false
+      nextBtn.disabled = false
     }
-  };
+  }
 
-  handleScrollableCard();
+  handleScrollableCard()
 
   prevBtn.addEventListener('click', () => {
-    scrollableCardList.scrollLeft -= scrollableCardWidth;
-    handleScrollableCard();
-  });
+    scrollableCardList.scrollLeft -= scrollableCardWidth
+    handleScrollableCard()
+  })
 
   nextBtn.addEventListener('click', () => {
-    scrollableCardList.scrollLeft += scrollableCardWidth;
-    handleScrollableCard();
-  });
-
-
+    scrollableCardList.scrollLeft += scrollableCardWidth
+    handleScrollableCard()
+  })
 }
 
 // touch/drag card item handler
 const scrollableCardDragHandler = () => {
-  const scrollableCardList = document.querySelector('.scrollable-card__list');
+  const scrollableCardList = document.querySelector('.scrollable-card__list')
 
-  let isDown = false;
-  let startX;
-  let scrollLeft;
+  let isDown = false
+  let startX
+  let scrollLeft
 
   scrollableCardList.addEventListener('mousedown', (e) => {
-    isDown = true;
-    scrollableCardList.classList.add('active');
-    startX = e.pageX - scrollableCardList.offsetLeft;
-    scrollLeft = scrollableCardList.scrollLeft;
-  });
+    isDown = true
+    scrollableCardList.classList.add('active')
+    startX = e.pageX - scrollableCardList.offsetLeft
+    scrollLeft = scrollableCardList.scrollLeft
+  })
 
   scrollableCardList.addEventListener('mouseleave', () => {
-    isDown = false;
-    scrollableCardList.classList.remove('active');
-  });
+    isDown = false
+    scrollableCardList.classList.remove('active')
+  })
 
   scrollableCardList.addEventListener('mouseup', () => {
-    isDown = false;
-    scrollableCardList.classList.remove('active');
-  });
+    isDown = false
+    scrollableCardList.classList.remove('active')
+  })
 
   scrollableCardList.addEventListener('mousemove', (e) => {
-    if (!isDown) return;
-    e.preventDefault();
-    const x = e.pageX - scrollableCardList.offsetLeft;
-    const walk = (x - startX) * 3; //scroll-fast
-    scrollableCardList.scrollLeft = scrollLeft - walk;
-  });
+    if (!isDown) return
+    e.preventDefault()
+    const x = e.pageX - scrollableCardList.offsetLeft
+    const walk = (x - startX) * 3 // scroll-fast
+    scrollableCardList.scrollLeft = scrollLeft - walk
+  })
 }
 
-let resizeHandler = () => {
-  screenSize.value = window.innerWidth;
+const resizeHandler = () => {
+  screenSize.value = window.innerWidth
 }
 
 onMounted(() => {
@@ -454,15 +450,14 @@ onMounted(() => {
   scrollableCardButtonHandler()
   scrollableCardDragHandler()
 
-  window.addEventListener('resize', resizeHandler);
+  window.addEventListener('resize', resizeHandler)
 })
 
 onBeforeUnmount(() => {
   if (resizeHandler) {
-    window.removeEventListener('resize', resizeHandler);
+    window.removeEventListener('resize', resizeHandler)
   }
 })
-
 
 </script>
 
@@ -877,4 +872,3 @@ onBeforeUnmount(() => {
   }
 }
 </style>
-

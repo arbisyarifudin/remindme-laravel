@@ -23,4 +23,3 @@ app.provide('axios', app.config.globalProperties.axios)
 app.provide('bootstrap', bootstrap)
 
 app.mount('#app')
-

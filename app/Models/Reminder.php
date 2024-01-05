@@ -31,25 +31,26 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Reminder extends Model
 {
-    use HasFactory;
+  use HasFactory;
 
-    protected $fillable = [
-        'title',
-        'user_id',
-        'description',
-        'event_at',
-        'remind_at',
-    ];
+  protected $fillable = [
+    'title',
+    'user_id',
+    'description',
+    'event_at',
+    'remind_at',
+    'is_sent',
+  ];
 
-    protected $hidden = [
-        'user_id',
-        'created_at',
-        'updated_at'
-    ];
+  protected $hidden = [
+    'user_id',
+    'created_at',
+    'updated_at'
+  ];
 
-    /* RELATIONS */
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+  /* RELATIONS */
+  public function user()
+  {
+    return $this->belongsTo(User::class);
+  }
 }

@@ -18,7 +18,6 @@ const mapErrorMessage = (errors = []) => {
       }
     }
   }
-  // console.log('resultErrors', resultErrors)
   return resultErrors
 }
 
@@ -26,7 +25,7 @@ const showToast = (type = 'success', message) => {
   const toastStore = useToastStore()
   toastStore.addToast({
     type,
-    message,
+    message
   })
 }
 

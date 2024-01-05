@@ -46,13 +46,12 @@
 </template>
 
 <script setup>
-import { ref, inject, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { mapErrorMessage, showToast } from '@/helpers/utils';
+import { ref, inject, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { mapErrorMessage, showToast } from '@/helpers/utils'
 
-const $router = useRouter();
+const $router = useRouter()
 const axios = inject('axios')
-const bootstrap = inject('bootstrap')
 
 const formState = ref({
   email: '',
@@ -66,7 +65,6 @@ const errorState = ref({
 
 const loading = ref(false)
 const onSubmitForm = () => {
-
   // reset error state
   errorState.value = {
     email: '',
@@ -77,30 +75,29 @@ const onSubmitForm = () => {
 
   axios.post('/session', formState.value)
     .then(response => {
-      console.log(response.data);
+      console.log(response.data)
 
-      const { access_token, refresh_token, user } = response.data.data
+      const { access_token: accessToken, refresh_token: refreshToken, user } = response.data.data
 
       // save tokens and user to local storage
-      localStorage.setItem('accessToken', access_token)
-      localStorage.setItem('refreshToken', refresh_token)
+      localStorage.setItem('accessToken', accessToken)
+      localStorage.setItem('refreshToken', refreshToken)
       localStorage.setItem('user', JSON.stringify(user))
 
       // set axios auth header with access token
-      setAuthHeader(access_token)
+      setAuthHeader(accessToken)
 
       // show toast
       showToast('success', 'Login success!')
 
       // bring user to home page
-      $router.push({ name: 'App Home Page' });
+      $router.push({ name: 'App Home Page' })
     })
     .catch(error => {
       console.log(error?.response?.data)
       const messages = error?.response?.data?.msg
       if (typeof messages === 'object') {
         errorState.value = mapErrorMessage(error?.response?.data?.msg)
-        return
       } else {
         errorState.value = {
           email: '',
@@ -113,18 +110,18 @@ const onSubmitForm = () => {
     })
 }
 
-function setAuthHeader(accessToken) {
-  axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+function setAuthHeader (accessToken) {
+  axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`
 }
 
 onMounted(() => {
-    // check if user is already logged in
-    const accessToken = localStorage.getItem('accessToken')
-    const user = JSON.parse(localStorage.getItem('user'))
-    if (accessToken && user) {
-        setAuthHeader(accessToken)
-        $router.push({ name: 'App Home Page' });
-    }
+  // check if user is already logged in
+  const accessToken = localStorage.getItem('accessToken')
+  const user = JSON.parse(localStorage.getItem('user'))
+  if (accessToken && user) {
+    setAuthHeader(accessToken)
+    $router.push({ name: 'App Home Page' })
+  }
 })
 
 </script>
@@ -169,4 +166,3 @@ p {
   }
 }
 </style>
-

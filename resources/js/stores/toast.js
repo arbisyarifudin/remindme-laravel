@@ -8,14 +8,14 @@ export const useToastStore = defineStore('toast', {
     addToast (toast) {
       this.toasts.push({
         ...toast,
-        id: new Date().getTime() + Math.random(),
+        id: new Date().getTime() + Math.random()
       })
     },
     removeToast (id) {
-        const index = this.toasts.findIndex((toast) => toast.id === id)
-        if (index !== -1) {
-            this.toasts.splice(index, 1)
-        }
+      const index = this.toasts.findIndex((toast) => toast.id === id)
+      if (index !== -1) {
+        this.toasts.splice(index, 1)
+      }
     }
-  },
+  }
 })

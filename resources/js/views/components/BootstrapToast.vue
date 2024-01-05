@@ -32,18 +32,18 @@ import { useToastStore } from '@/stores/toast'
 const bootstrap = inject('bootstrap')
 
 onMounted(() => {
-    initToast()
+  initToast()
 })
 
 const toastStore = useToastStore()
 const toasts = computed(() => {
-    return toastStore.toasts
+  return toastStore.toasts
 })
 
 const option = {
-    animation: true,
-    autohide: true,
-    delay: 3000
+  animation: true,
+  autohide: true,
+  delay: 3000
 }
 
 let toastElList = null
@@ -53,45 +53,44 @@ let toastList = null
 // toastList = [...toastElList].map(toastEl => new bootstrap.Toast(toastEl, option))
 
 const initToast = () => {
-    nextTick(() => {
-        // toastElList = document.querySelectorAll('.toast')
-        toastElList = document.querySelectorAll('.toast:not(.hide)')
-        if (!toastElList) {
-            return
-        }
-        toastList = [...toastElList].map(toastEl => new bootstrap.Toast(toastEl, option))
-        toastList.forEach(toast => {
-            // if not shown, show it
-            if (!toast._element.classList.contains('show')) {
-                toast.show()
-            }
-        })
-
-        // add event listener to each toast
-        toastElList.forEach(toastEl => {
-            toastEl.addEventListener('hidden.bs.toast', function (event) {
-
-                // remove toast element
-                toastEl.remove()
-
-                // get id from element
-                const id = event.target.id
-                toastStore.removeToast(id)
-            })
-        })
+  nextTick(() => {
+    // toastElList = document.querySelectorAll('.toast')
+    toastElList = document.querySelectorAll('.toast:not(.hide)')
+    if (!toastElList) {
+      return
+    }
+    toastList = [...toastElList].map(toastEl => new bootstrap.Toast(toastEl, option))
+    toastList.forEach(toast => {
+      // if not shown, show it
+      if (!toast._element.classList.contains('show')) {
+        toast.show()
+      }
     })
+
+    // add event listener to each toast
+    toastElList.forEach(toastEl => {
+      toastEl.addEventListener('hidden.bs.toast', function (event) {
+        // remove toast element
+        toastEl.remove()
+
+        // get id from element
+        const id = event.target.id
+        toastStore.removeToast(id)
+      })
+    })
+  })
 }
 
 watch(() => toasts.value, (newVal) => {
-    // console.log('toasts changed')
-    initToast()
+  // console.log('toasts changed')
+  initToast()
 }, { deep: true })
 
 const bgClass = (type) => {
-    return `text-bg-${type}`
+  return `text-bg-${type}`
 }
 
 const removeToast = (id) => {
-    toastStore.removeToast(id)
+  toastStore.removeToast(id)
 }
 </script>

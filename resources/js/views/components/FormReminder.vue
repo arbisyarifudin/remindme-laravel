@@ -80,268 +80,265 @@
 
 <script setup>
 import moment from 'moment'
-import { ref, onMounted, nextTick, computed, watch, inject } from 'vue'
-import { defineProps, defineEmits } from 'vue'
+import { ref, onMounted, nextTick, computed, watch, inject, defineProps, defineEmits } from 'vue'
 import { showToast, mapErrorMessage } from '@/helpers/utils'
 
 const axios = inject('axios')
 const bootstrap = inject('bootstrap')
 
 const $props = defineProps({
-    show: {
-        type: Boolean,
-        default: false
-    },
-    isEditMode: {
-        type: Boolean,
-        default: false
-    },
-    data: {
-        type: Object,
-        default: () => ({})
-    }
+  show: {
+    type: Boolean,
+    default: false
+  },
+  isEditMode: {
+    type: Boolean,
+    default: false
+  },
+  data: {
+    type: Object,
+    default: () => ({})
+  }
 })
 
 const $emit = defineEmits(['close', 'success'])
 
 watch(() => $props.show, val => {
-    if (val) {
-        showFormReminderDialog()
+  if (val) {
+    showFormReminderDialog()
 
-        // if edit mode, populate form state with data
-        if ($props.isEditMode) {
-            formState.value = JSON.parse(JSON.stringify({
-                title: $props.data.title,
-                description: $props.data.description,
-                event_date: getDate($props.data.event_at, 'YYYY-MM-DD'),
-                event_time: getDate($props.data.event_at, 'HH:mm'),
-                remind_at: getRemindAtOptionValue($props.data.remind_at)
-            }))
-        }
+    // if edit mode, populate form state with data
+    if ($props.isEditMode) {
+      formState.value = JSON.parse(JSON.stringify({
+        title: $props.data.title,
+        description: $props.data.description,
+        event_date: getDate($props.data.event_at, 'YYYY-MM-DD'),
+        event_time: getDate($props.data.event_at, 'HH:mm'),
+        remind_at: getRemindAtOptionValue($props.data.remind_at)
+      }))
     }
+  }
 })
 
 const getRemindAtOptionValue = (remindAtLabel) => {
-    const remindAtOption = remindMeOptions.find(opt => opt.label === remindAtLabel)
-    return remindAtOption?.value
+  const remindAtOption = remindMeOptions.find(opt => opt.label === remindAtLabel)
+  return remindAtOption?.value
 }
 
 let formReminderDialogModal = null
 const showFormReminderDialog = () => {
-    formReminderDialogModal.show()
+  formReminderDialogModal.show()
 }
 
 onMounted(() => {
-    nextTick(() => {
-        formReminderDialogModal = new bootstrap.Modal(document.getElementById('formReminderDialogModal'))
-        document.getElementById('formReminderDialogModal').addEventListener('hidden.bs.modal', event => {
-            //   console.log('event', event)
-            $emit('close')
-        })
+  nextTick(() => {
+    formReminderDialogModal = new bootstrap.Modal(document.getElementById('formReminderDialogModal'))
+    document.getElementById('formReminderDialogModal').addEventListener('hidden.bs.modal', event => {
+      //   console.log('event', event)
+      $emit('close')
     })
+  })
 })
 
 const remindMeOptions = [
-    { value: 1, label: 'At time of event' },
-    { value: 2, label: '5 minutes before' },
-    { value: 3, label: '10 minutes before' },
-    { value: 4, label: '15 minutes before' },
-    { value: 5, label: '30 minutes before' },
-    { value: 6, label: '1 hour before' },
-    { value: 7, label: '2 hours before' },
-    { value: 8, label: '1 day before' },
-    { value: 9, label: '2 days before' }
+  { value: 1, label: 'At time of event' },
+  { value: 2, label: '5 minutes before' },
+  { value: 3, label: '10 minutes before' },
+  { value: 4, label: '15 minutes before' },
+  { value: 5, label: '30 minutes before' },
+  { value: 6, label: '1 hour before' },
+  { value: 7, label: '2 hours before' },
+  { value: 8, label: '1 day before' },
+  { value: 9, label: '2 days before' }
 ]
 
 const minTime = computed(() => {
-    const now = moment()
+  const now = moment()
 
-    // if today, min time is now
-    const formDate = moment(formState.value.event_date)
-    if (now.isSame(formDate, 'day')) {
-        return now.format('HH:mm')
-    }
+  // if today, min time is now
+  const formDate = moment(formState.value.event_date)
+  if (now.isSame(formDate, 'day')) {
+    return now.format('HH:mm')
+  }
 
-    return '00:00'
+  return '00:00'
 })
 
 const formState = ref({
-    title: '',
-    description: '',
-    event_date: '',
-    event_time: '',
-    remind_at: 4
+  title: '',
+  description: '',
+  event_date: '',
+  event_time: '',
+  remind_at: 4
 })
 
 const errorState = ref({
+  title: '',
+  description: '',
+  event_date: '',
+  event_time: '',
+  remind_at: '',
+  other: ''
+})
+
+const getDate = (timeOrDate = 0, format = 'DD MMM YYYY') => {
+  if (!timeOrDate) return moment().format(format)
+
+  // chekc is date or time
+  if (typeof timeOrDate === 'string' && timeOrDate.includes('-')) {
+    return moment(timeOrDate).format(format)
+  }
+
+  return moment(timeOrDate * 1000).format(format)
+}
+
+const getRemindAtTime = () => {
+  // get remind_at label
+  const remindAtLabel = remindMeOptions.find(opt => opt.value === formState.value.remind_at)?.label
+
+  // get remind at as unix datetime from (event_date + event_time) - remindAtLabel
+  if (remindAtLabel === 'At time of event') {
+    return moment(formState.value.event_date + ' ' + formState.value.event_time).unix()
+  } else {
+    // if label contains minutes
+    if (remindAtLabel.includes('minutes')) {
+      const minutes = remindAtLabel.split(' ')[0]
+      return moment(formState.value.event_date + ' ' + formState.value.event_time).subtract(minutes, 'minutes').unix()
+    } else if (remindAtLabel.includes('hour')) {
+      const hours = remindAtLabel.split(' ')[0]
+      return moment(formState.value.event_date + ' ' + formState.value.event_time).subtract(hours, 'hours').unix()
+    } else if (remindAtLabel.includes('day')) {
+      const days = remindAtLabel.split(' ')[0]
+      return moment(formState.value.event_date + ' ' + formState.value.event_time).subtract(days, 'days').unix()
+    }
+  }
+}
+
+const submitLoading = ref(false)
+const onSubmit = async () => {
+  // reset error state
+  errorState.value = {
     title: '',
     description: '',
     event_date: '',
     event_time: '',
     remind_at: '',
     other: ''
-})
+  }
 
-const getDate = (timeOrDate = 0, format = 'DD MMM YYYY') => {
-    if (!timeOrDate) return moment().format(format)
+  // validate form
+  if (!__validateForm()) return
 
-    // chekc is date or time
-    if (typeof timeOrDate === 'string' && timeOrDate.includes('-')) {
-        return moment(timeOrDate).format(format)
-    }
+  const submitData = {
+    title: formState.value.title,
+    description: formState.value.description,
+    event_at: moment(formState.value.event_date + ' ' + formState.value.event_time).unix(),
+    remind_at: getRemindAtTime()
+  }
+  //   console.log('submitData', submitData)
 
-    return moment(timeOrDate * 1000).format(format)
+  submitLoading.value = true
+
+  // submit form
+  if (!$props.isEditMode) {
+    await __submitAdd(submitData)
+  } else {
+    await __submitEdit(submitData)
+  }
+
+  submitLoading.value = false
 }
 
-const getRemindAtTime = () => {
-    // get remind_at label
-    const remindAtLabel = remindMeOptions.find(opt => opt.value === formState.value.remind_at)?.label
+const __validateForm = () => {
+  // validate title
+  if (!formState.value.title) {
+    errorState.value.title = 'Title is required'
+    return false
+  }
 
-    // get remind at as unix datetime from (event_date + event_time) - remindAtLabel
-    if (remindAtLabel === 'At time of event') {
-        return moment(formState.value.event_date + ' ' + formState.value.event_time).unix()
-    } else {
-        // if label contains minutes
-        if (remindAtLabel.includes('minutes')) {
-            const minutes = remindAtLabel.split(' ')[0]
-            return moment(formState.value.event_date + ' ' + formState.value.event_time).subtract(minutes, 'minutes').unix()
-        } else if (remindAtLabel.includes('hour')) {
-            const hours = remindAtLabel.split(' ')[0]
-            return moment(formState.value.event_date + ' ' + formState.value.event_time).subtract(hours, 'hours').unix()
-        } else if (remindAtLabel.includes('day')) {
-            const days = remindAtLabel.split(' ')[0]
-            return moment(formState.value.event_date + ' ' + formState.value.event_time).subtract(days, 'days').unix()
-        }
-    }
+  // validate description
+  if (!formState.value.description) {
+    errorState.value.description = 'Description is required'
+    return false
+  }
+
+  // validate event_date
+  if (!formState.value.event_date) {
+    errorState.value.event_date = 'Event date is required'
+    return false
+  }
+
+  // validate event_time minTime
+  const formDate = moment(formState.value.event_date)
+  const formTime = moment(formState.value.event_time, 'HH:mm')
+  const now = moment()
+  if (now.isSame(formDate, 'day') && formTime.isBefore(now)) {
+    errorState.value.event_time = 'If you choose today, event time must be greater than now'
+    return false
+  }
+
+  return true
 }
 
-const submitLoading = ref(false)
-const onSubmit = async () => {
+const __submitAdd = async (submitData) => {
+  return await axios.post('/reminders', submitData)
+    .then(res => {
+      // console.log(res.data.data)
 
-    // reset error state
-    errorState.value = {
+      showToast('success', 'New reminder added!')
+      formReminderDialogModal.hide()
+
+      // reset form state
+      formState.value = {
         title: '',
         description: '',
         event_date: '',
         event_time: '',
-        remind_at: '',
-        other: ''
-    }
+        remind_at: 4
+      }
 
-    // validate form
-    if (!__validateForm()) return
-
-    const submitData = {
-        title: formState.value.title,
-        description: formState.value.description,
-        event_at: moment(formState.value.event_date + ' ' + formState.value.event_time).unix(),
-        remind_at: getRemindAtTime()
-    }
-    //   console.log('submitData', submitData)
-
-    submitLoading.value = true
-
-    // submit form
-    if (!$props.isEditMode) {
-        await __submitAdd(submitData)
-    } else {
-        await __submitEdit(submitData)
-    }
-
-    submitLoading.value = false
-}
-
-const __validateForm = () => {
-    // validate title
-    if (!formState.value.title) {
-        errorState.value.title = 'Title is required'
-        return false
-    }
-
-    // validate description
-    if (!formState.value.description) {
-        errorState.value.description = 'Description is required'
-        return false
-    }
-
-    // validate event_date
-    if (!formState.value.event_date) {
-        errorState.value.event_date = 'Event date is required'
-        return false
-    }
-
-    // validate event_time minTime
-    const formDate = moment(formState.value.event_date)
-    const formTime = moment(formState.value.event_time, 'HH:mm')
-    const now = moment()
-    if (now.isSame(formDate, 'day') && formTime.isBefore(now)) {
-        errorState.value.event_time = 'If you choose today, event time must be greater than now'
-        return false
-    }
-
-    return true
-}
-
-const __submitAdd = async (submitData) => {
-    return await axios.post('/reminders', submitData)
-        .then(res => {
-            // console.log(res.data.data)
-
-            showToast('success', 'New reminder added!')
-            formReminderDialogModal.hide()
-
-            // reset form state
-            formState.value = {
-                title: '',
-                description: '',
-                event_date: '',
-                event_time: '',
-                remind_at: 4
-            }
-
-            $emit('success')
-        })
-        .catch(err => errorHandler(err))
+      $emit('success')
+    })
+    .catch(err => errorHandler(err))
 }
 
 const __submitEdit = async (submitData) => {
-    return await axios.put('/reminders/' + $props.data.id, submitData)
-        .then(res => {
-            // console.log(res.data.data)
+  return await axios.put('/reminders/' + $props.data.id, submitData)
+    .then(res => {
+      // console.log(res.data.data)
 
-            showToast('success', 'Reminder updated!')
-            formReminderDialogModal.hide()
+      showToast('success', 'Reminder updated!')
+      formReminderDialogModal.hide()
 
-            // reset form state
-            formState.value = {
-                title: '',
-                description: '',
-                event_date: '',
-                event_time: '',
-                remind_at: 4
-            }
+      // reset form state
+      formState.value = {
+        title: '',
+        description: '',
+        event_date: '',
+        event_time: '',
+        remind_at: 4
+      }
 
-            $emit('success', res.data.data)
-        })
-        .catch(err => errorHandler(err))
+      $emit('success', res.data.data)
+    })
+    .catch(err => errorHandler(err))
 }
 
 const errorHandler = (err) => {
-    console.log('Form Error',err)
-    const messages = err?.response?.data?.msg
-    if (typeof messages === 'object') {
-        errorState.value = mapErrorMessage(err?.response?.data?.msg)
-        return
-    } else {
-        errorState.value = {
-            title: '',
-            description: '',
-            event_date: '',
-            event_time: '',
-            remind_at: '',
-            other: messages
-        }
+  console.log('Form Error', err)
+  const messages = err?.response?.data?.msg
+  if (typeof messages === 'object') {
+    errorState.value = mapErrorMessage(err?.response?.data?.msg)
+  } else {
+    errorState.value = {
+      title: '',
+      description: '',
+      event_date: '',
+      event_time: '',
+      remind_at: '',
+      other: messages
     }
+  }
 }
 
 </script>
