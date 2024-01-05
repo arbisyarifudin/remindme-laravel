@@ -79,7 +79,7 @@ class ReminderController extends ApiController
     $validator = \Validator::make($request->all(), [
       'title' => 'required|string|min:3,max:50',
       'description' => 'nullable|string',
-      'event_at' => 'integer',
+      'event_at' => 'required|integer',
       'remind_at' => 'nullable|integer',
     ]);
 
