@@ -1,74 +1,124 @@
 version: "3.7"
 
 networks:
-  remindme-network:
-    driver: bridge
+    remindme-network:
+        driver: bridge
 
 services:
-  # PostgreSQL Service
-  db:
-    image: postgres:14.6
-    container_name: remindme-pgsql-container
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${DB_DATABASE}
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      SERVICE_NAME: postgres
-      SERVICE_TAGS: dev
-    ports:
-      - 5432:${DB_PORT}
-    volumes:
-      - ./.docker/postgres/data:/var/lib/postgresql/data
-      - ./.docker/postgres/db:/docker-entrypoint-initdb.d/
-      - ./.docker/postgres/postgres.conf:/etc/postgresql.conf
-    networks:
-      - remindme-network
+    # PostgreSQL Service
+    db:
+        image: postgres:14.6
+        container_name: remindme-pgsql-container
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: ${DB_DATABASE}
+            POSTGRES_USER: ${DB_USERNAME}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+            SERVICE_NAME: postgres
+            SERVICE_TAGS: dev
+        ports:
+            - 5432:${DB_PORT}
+        volumes:
+            - ./.docker/postgres/data:/var/lib/postgresql/data
+            - ./.docker/postgres/db:/docker-entrypoint-initdb.d/
+            - ./.docker/postgres/postgres.conf:/etc/postgresql.conf
+        networks:
+            - remindme-network
 
-  # PHP Service
-  php:
-    build:
-      args:
-          user: arbi
-          uid: 1000
-      context: .
-      dockerfile: Dockerfile
-    image: remindme-laravel
-    container_name: remindme-php-container
-    restart: unless-stopped
-    environment:
-      SERVICE_NAME: app
-      SERVICE_TAGS: dev
-      DB_HOST: db
-      APP_URL: "http://localhost:9001"
-    tty: true
-    ports:
-      - 9000:9000
-      - 5173:5173 # for vite dev server
-    depends_on:
-      - db
-    working_dir: /var/www/
-    volumes:
-      - ./:/var/www
-      - ./.docker/php/php.ini:/usr/local/etc/php/conf.d/local.ini
-      - ./.docker/php/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
-    command: >
-      sh -c "cp .env.example .env && php artisan migrate --force --seed && php-fpm"
-    networks:
-      - remindme-network
+    # PHP Service
+    php:
+        build:
+            args:
+                user: arbi
+                uid: 1000
+            context: .
+            dockerfile: Dockerfile
+        image: remindme-laravel
+        container_name: remindme-php-container
+        restart: unless-stopped
+        environment:
+            SERVICE_NAME: app
+            SERVICE_TAGS: dev
+            DB_HOST: db
+            APP_URL: "http://localhost:9001"
+        tty: true
+        ports:
+            - 9000:9000
+            - 5173:5173 # for vite dev server
+        depends_on:
+            - db
+        working_dir: /var/www/
+        volumes:
+            - ./:/var/www
+            - ./.docker/php/php.ini:/usr/local/etc/php/conf.d/local.ini
+            - ./.docker/php/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+        command: >
+            sh -c "cp .env.example .env && php artisan migrate --force --seed && php-fpm"
+        networks:
+            - remindme-network
 
-  # NGINX Service
-  nginx:
-    image: nginx:1.17-alpine
-    container_name: remindme-nginx-container
-    restart: unless-stopped
-    ports:
-      - 9001:80
-    depends_on:
-      - php
-    volumes:
-      - ./:/var/www
-      - ./.docker/nginx:/etc/nginx/conf.d
-      - ./.docker/nginx/log:/var/log/nginx
-    networks:
-      - remindme-network
+    # Scheduler Service
+    scheduler:
+        image: remindme-laravel
+        container_name: remindme-scheduler-container
+        restart: unless-stopped
+        environment:
+            SERVICE_NAME: scheduler
+            SERVICE_TAGS: dev
+            DB_HOST: db
+        tty: true
+        depends_on:
+            - db
+        working_dir: /var/www/
+        volumes:
+            - ./:/var/www
+        command: >
+            sh -c "cp .env.example .env && php artisan schedule:work"
+        networks:
+            - remindme-network
+
+    # Redis Service
+    # redis:
+    #     image: redis:alpine
+    #     container_name: remindme-redis-container
+    #     restart: unless-stopped
+    #     ports:
+    #         - 6379:6379
+    #     networks:
+    #         - remindme-network
+
+    # Database Queue Service
+    queue:
+        image: remindme-laravel
+        container_name: remindme-queue-container
+        restart: unless-stopped
+        environment:
+            SERVICE_NAME: queue
+            SERVICE_TAGS: dev
+            DB_HOST: db
+        tty: true
+        depends_on:
+            - db
+        working_dir: /var/www/
+        volumes:
+            - ./:/var/www
+        command: >
+            sh -c "cp .env.example .env && php artisan queue:work --tries=3 --timeout=90"
+        networks:
+            - remindme-network
+
+    # NGINX Service
+    nginx:
+        image: nginx:1.17-alpine
+        container_name: remindme-nginx-container
+        restart: unless-stopped
+        ports:
+            - 9001:80
+        depends_on:
+            - php
+        volumes:
+            - ./:/var/www
+            - ./.docker/nginx:/etc/nginx/conf.d
+            - ./.docker/nginx/log:/var/log/nginx
+        networks:
+            - remindme-network

@@ -9,7 +9,7 @@ ARG uid
 # (and some other required dependencies). It then installs and configures several php extensions
 # including pdo_pgsql and redis. Finally, it downloads and installs composer in the image.
 RUN apt-get update \
-    && apt-get install -y gnupg curl wget ca-certificates unzip lsb-release libgd-dev libpng-dev \
+    && apt-get install -y cron gnupg curl wget ca-certificates unzip lsb-release libgd-dev libpng-dev \
     && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
     && echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" | tee  /etc/apt/sources.list.d/pgdg.list \
     && apt-get install -y \
@@ -72,6 +72,13 @@ RUN npm run build
 
 # Run the startup script when the container starts
 # CMD ["/usr/local/bin/startup.sh"]
+
+# Copy entrypoint script to container
+# COPY entrypoint.sh /usr/local/bin/
+# RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Set entry point
+# ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Set user and expose port for php-fpm
 USER $user
